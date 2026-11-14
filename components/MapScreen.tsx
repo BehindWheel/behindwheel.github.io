@@ -1,20 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import DetailPanel, { type Detail } from "@/components/DetailPanel";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { loadCdnData, type CdnData } from "@/lib/cdn";
 import { createMap, onStyleLoad } from "@/lib/map/createMap";
 import {
   addMarkerGroups,
-  bindMarkerPopups,
+  bindMarkerSelections,
   createMarkerGroups,
   setMarkersVisibility,
   type MarkerGroups,
+  type SelectionKind,
 } from "@/lib/map/markers";
 import {
   applyOverlays,
-  bindLayerPopups,
+  bindLayerSelection,
   LAYER_IDS,
   setLayerVisibility,
 } from "@/lib/map/overlays";
@@ -25,6 +27,28 @@ type LayerToggles = {
   mediumSpeed: boolean;
   repairs: boolean;
 };
+
+export type SelectedFeature = {
+  kind: SelectionKind;
+  id: string;
+};
+
+function findDetail(data: CdnData, selected: SelectedFeature): Detail | null {
+  switch (selected.kind) {
+    case "stationary": {
+      const camera = data.stationary.find((item) => item.id === selected.id);
+      return camera ? { kind: "stationary", camera } : null;
+    }
+    case "mediumSpeed": {
+      const camera = data.mediumSpeed.find((item) => item.id === selected.id);
+      return camera ? { kind: "mediumSpeed", camera } : null;
+    }
+    case "repairs": {
+      const repair = data.repairs.find((item) => item.id === selected.id);
+      return repair ? { kind: "repairs", repair } : null;
+    }
+  }
+}
 
 const LAYER_TO_LAYERS: Record<keyof LayerToggles, string[]> = {
   stationary: [],
@@ -46,25 +70,34 @@ export default function MapScreen() {
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [selected, setSelected] = useState<SelectedFeature | null>(null);
+  // The data in state drives the detail panel; the ref twin drives the
+  // style-swap replay, which runs outside render.
+  const [data, setData] = useState<CdnData | null>(null);
+
+  const selectFeature = useCallback((kind: SelectionKind, id: string) => {
+    setSelected({ kind, id });
+  }, []);
 
   const loadData = useCallback(async (map: maplibregl.Map) => {
     try {
       const data = await loadCdnData();
       dataRef.current = data;
+      setData(data);
       if (!markersRef.current) {
         markersRef.current = createMarkerGroups(data);
         addMarkerGroups(map, markersRef.current);
-        bindMarkerPopups(map, markersRef.current);
+        bindMarkerSelections(markersRef.current, selectFeature);
       }
       applyOverlays(map, data);
-      bindLayerPopups(map, data);
+      bindLayerSelection(map, selectFeature);
       setGeneratedAt(data.generatedAt);
       setStatus("ready");
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : String(error));
       setStatus("error");
     }
-  }, []);
+  }, [selectFeature]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -94,6 +127,7 @@ export default function MapScreen() {
       mapRef.current = null;
       dataRef.current = null;
       markersRef.current = null;
+      setData(null);
     };
   }, [loadData]);
 
@@ -128,10 +162,16 @@ export default function MapScreen() {
     void loadData(map);
   }, [loadData]);
 
+  const closeDetail = useCallback(() => setSelected(null), []);
+  const detail = useMemo(
+    () => (data && selected ? findDetail(data, selected) : null),
+    [data, selected],
+  );
+
   return (
     <div className="screen">
-      <div ref={containerRef} className="map-container" />
-      <div className="panel">
+      <div ref={containerRef} className="map-container" inert={detail ? true : undefined} />
+      <div className="panel" inert={detail ? true : undefined}>
         <div className="panel-title">Grodno Roads</div>
         <div role="group" aria-label="Слои карты">
           <label className="panel-row">
@@ -188,6 +228,7 @@ export default function MapScreen() {
           )}
         </div>
       </div>
+      {detail && <DetailPanel detail={detail} onClose={closeDetail} />}
     </div>
   );
 }

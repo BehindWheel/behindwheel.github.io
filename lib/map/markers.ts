@@ -30,48 +30,9 @@ export type MarkerGroups = {
   repairs: MarkerGroup<RoadRepair>;
 };
 
-function speedLabel(car: number, truck: number): string {
-  return truck > 0 ? `${car} / ${truck} км/ч` : `${car} км/ч`;
-}
+export type SelectionKind = "stationary" | "mediumSpeed" | "repairs";
 
-function popupHtml(body: string): string {
-  return `<div class="site-popup">${body}</div>`;
-}
-
-export function stationaryPopup(camera: StationaryCamera): string {
-  return popupHtml(
-    `<strong>${camera.name}</strong>` +
-      `<div>${speedLabel(camera.speedCar, camera.speedTruck)}</div>` +
-      `<div>${camera.bidirectional ? "Оба направления" : "Одно направление"}</div>` +
-      `<div class="site-popup-muted">Обновлено ${camera.updateTime}</div>`,
-  );
-}
-
-export function mediumSpeedPopup(camera: MediumSpeedCamera): string {
-  return popupHtml(
-    `<strong>${camera.name}</strong>` +
-      `<div>${speedLabel(camera.speedCar, camera.speedTruck)}</div>` +
-      `<div>${camera.bidirectional ? "Оба направления" : "Одно направление"}, ${camera.points.length} точек</div>` +
-      `<div class="site-popup-muted">Обновлено ${camera.updateTime}</div>`,
-  );
-}
-
-export function repairPopup(repair: RoadRepair): string {
-  return popupHtml(
-    `<strong>${repair.road}</strong>` +
-      (repair.note ? `<div>${repair.note}</div>` : "") +
-      `<div>${repair.dateBegin} — ${repair.dateEnd}</div>` +
-      (repair.speed > 0 ? `<div>Ограничение ${repair.speed} км/ч</div>` : "") +
-      `<div class="site-popup-muted">${repair.verified ? "Проверено" : "Не проверено"}</div>`,
-  );
-}
-
-export function showPopup(map: maplibregl.Map, lngLat: maplibregl.LngLat, html: string): void {
-  new maplibregl.Popup({ maxWidth: "280px" })
-    .setLngLat(lngLat)
-    .setHTML(html)
-    .addTo(map);
-}
+export type SelectFeature = (kind: SelectionKind, id: string) => void;
 
 type SignMarkerOptions = {
   icon: string;
@@ -97,23 +58,23 @@ function createSignMarker({ icon, label }: SignMarkerOptions): maplibregl.Marker
 }
 
 function bindGroupActivations<T extends { id: string }>(
-  map: maplibregl.Map,
   group: MarkerGroup<T>,
-  popup: (item: T) => string,
+  kind: SelectionKind,
+  onSelect: SelectFeature,
 ): void {
   for (const marker of group.markers) {
     const element = marker.getElement();
-    const open = (event: Event) => {
+    const select = (event: Event) => {
       event.stopPropagation();
-      const item = group.itemById.get(element.dataset.id ?? "");
-      if (item) {
-        showPopup(map, marker.getLngLat(), popup(item));
+      const id = element.dataset.id;
+      if (id !== undefined) {
+        onSelect(kind, id);
       }
     };
-    element.addEventListener("click", open);
+    element.addEventListener("click", select);
     element.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
-        open(event);
+        select(event);
       }
     });
   }
@@ -200,10 +161,13 @@ export function addMarkerGroups(map: maplibregl.Map, groups: MarkerGroups): void
   }
 }
 
-export function bindMarkerPopups(map: maplibregl.Map, groups: MarkerGroups): void {
-  bindGroupActivations(map, groups.stationary, stationaryPopup);
-  bindGroupActivations(map, groups.mediumSpeed, mediumSpeedPopup);
-  bindGroupActivations(map, groups.repairs, repairPopup);
+export function bindMarkerSelections(
+  groups: MarkerGroups,
+  onSelect: SelectFeature,
+): void {
+  bindGroupActivations(groups.stationary, "stationary", onSelect);
+  bindGroupActivations(groups.mediumSpeed, "mediumSpeed", onSelect);
+  bindGroupActivations(groups.repairs, "repairs", onSelect);
 }
 
 export function setMarkersVisibility(

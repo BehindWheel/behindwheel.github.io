@@ -6,7 +6,7 @@
 import type { Feature, FeatureCollection, LineString } from "geojson";
 import maplibregl from "maplibre-gl";
 import type { CdnData, CdnPoint, MediumSpeedCamera, RoadRepair } from "../cdn";
-import { mediumSpeedPopup, repairPopup, showPopup } from "./markers";
+import type { SelectFeature } from "./markers";
 import { MEDIUM_SPEED_LINE_COLOR, REPAIRS_LINE_COLOR } from "./style";
 
 export const LAYER_IDS = {
@@ -97,37 +97,29 @@ export function applyOverlays(map: maplibregl.Map, data: CdnData): void {
   }
 }
 
-type LayerPopupState = { data: CdnData; bound: boolean };
+// map.on() registers a listener and never dedupes, and bindLayerSelection is
+// re-run on every data load — so the handlers bind once per map. They read
+// the feature id from the click event, nothing is captured.
+const layerSelectionBound = new WeakSet<maplibregl.Map>();
 
-// map.on() registers a listener and never dedupes, and bindLayerPopups runs
-// on every data load (the retry button re-runs loadData) — so the handlers
-// bind once per map and read the latest data through this WeakMap.
-const layerPopupState = new WeakMap<maplibregl.Map, LayerPopupState>();
-
-export function bindLayerPopups(map: maplibregl.Map, data: CdnData): void {
-  const state = layerPopupState.get(map) ?? { data, bound: false };
-  state.data = data;
-  layerPopupState.set(map, state);
-  if (state.bound) {
+export function bindLayerSelection(
+  map: maplibregl.Map,
+  onSelect: SelectFeature,
+): void {
+  if (layerSelectionBound.has(map)) {
     return;
   }
-  state.bound = true;
+  layerSelectionBound.add(map);
   map.on("click", LAYER_IDS.mediumSpeed, (event) => {
     const id = event.features?.[0]?.properties?.id as string | undefined;
-    const camera = layerPopupState.get(map)?.data.mediumSpeed.find(
-      (item) => item.id === id,
-    );
-    if (camera) {
-      showPopup(map, event.lngLat, mediumSpeedPopup(camera));
+    if (id !== undefined) {
+      onSelect("mediumSpeed", id);
     }
   });
   map.on("click", LAYER_IDS.repairsLines, (event) => {
     const id = event.features?.[0]?.properties?.id as string | undefined;
-    const repair = layerPopupState.get(map)?.data.repairs.find(
-      (item) => item.id === id,
-    );
-    if (repair) {
-      showPopup(map, event.lngLat, repairPopup(repair));
+    if (id !== undefined) {
+      onSelect("repairs", id);
     }
   });
 }
