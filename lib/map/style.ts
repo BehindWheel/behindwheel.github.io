@@ -4,7 +4,9 @@ export const BELARUS_BOUNDS: [[number, number], [number, number]] = [
 ];
 
 // The basemap follows the color scheme like every themed surface: Liberty in
-// light, OpenFreeMap's Dark in dark.
+// light, OpenFreeMap's Dark in dark — the pitch-black rgb(12,12,12) style.
+// Fiord (#45516E) and Positron (light gray) were the softer candidates, the
+// black one won the call.
 export const LIGHT_MAP_STYLE = "https://tiles.openfreemap.org/styles/liberty";
 export const DARK_MAP_STYLE = "https://tiles.openfreemap.org/styles/dark";
 
