@@ -5,7 +5,12 @@
 
 import maplibregl from "maplibre-gl";
 import "./map.css";
-import type { MediumSpeedCamera, RoadRepair, StationaryCamera } from "../cdn";
+import type {
+  CdnPoint,
+  MediumSpeedCamera,
+  RoadRepair,
+  StationaryCamera,
+} from "../cdn";
 
 const ICONS = {
   camera: "/icons/camera.svg",
@@ -117,6 +122,13 @@ function buildGroup<T extends { id: string }>(
   return group;
 }
 
+// The dashboard puts an endpoint sign at both polyline ends (a medium-speed
+// section's two cameras, a repair stretch's entry/exit); a one-vertex line
+// gets a single sign.
+function lineEnds(points: CdnPoint[]): CdnPoint[] {
+  return points.length > 1 ? [points[0], points[points.length - 1]] : [points[0]];
+}
+
 export function createMarkerGroups(data: {
   stationary: StationaryCamera[];
   mediumSpeed: MediumSpeedCamera[];
@@ -134,21 +146,21 @@ export function createMarkerGroups(data: {
     ),
     mediumSpeed: buildGroup(
       data.mediumSpeed.filter((camera) => camera.points.length > 0),
-      (camera) => [
-        createSignMarker({ icon: ICONS.mediumSpeed }).setLngLat([
-          camera.points[0].lng,
-          camera.points[0].lat,
-        ]),
-      ],
+      (camera) =>
+        lineEnds(camera.points).map((at) =>
+          createSignMarker({ icon: ICONS.mediumSpeed }).setLngLat([
+            at.lng,
+            at.lat,
+          ]),
+        ),
     ),
     repairs: buildGroup(
       data.repairs.filter(
         (repair) => repair.type === "point" ? repair.point : repair.points?.length,
       ),
       (repair) => {
-        // A point work wears the warning sign at its point; a stretch wears
-        // the barrier sign at both ends of its polyline (road-repairs-point.svg
-        // vs road-repairs.svg). A one-vertex polyline gets a single sign.
+        // A point work wears the warning sign at its point, a stretch the
+        // barrier sign (road-repairs-point.svg vs road-repairs.svg).
         if (repair.type === "point") {
           return [
             createSignMarker({ icon: ICONS.repairsPoint }).setLngLat([
@@ -157,12 +169,7 @@ export function createMarkerGroups(data: {
             ]),
           ];
         }
-        const points = repair.points!;
-        const ends =
-          points.length > 1
-            ? [points[0], points[points.length - 1]]
-            : [points[0]];
-        return ends.map((at) =>
+        return lineEnds(repair.points!).map((at) =>
           createSignMarker({ icon: ICONS.repairsLine }).setLngLat([
             at.lng,
             at.lat,
