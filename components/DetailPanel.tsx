@@ -43,7 +43,6 @@ function detailRows(detail: Detail) {
           label="Направление"
           value={camera.bidirectional ? "Оба направления" : "Одно направление"}
         />
-        <Row label="Угол" value={`${camera.angle}°`} />
         <Row label="Регион" value={camera.region} />
         <Row label="Обновлено" value={formatDate(camera.updateTime)} />
       </>
@@ -61,8 +60,6 @@ function detailRows(detail: Detail) {
             `, ${camera.points.length} точек`
           }
         />
-        <Row label="Угол начала" value={`${camera.angleStart}°`} />
-        <Row label="Угол конца" value={`${camera.angleEnd}°`} />
         <Row label="Регион" value={camera.region} />
         <Row label="Обновлено" value={formatDate(camera.updateTime)} />
       </>
