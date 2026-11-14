@@ -235,8 +235,8 @@ export default function MapScreen() {
         </button>
         {filtersOpen && (
           <div className="panel" id="layer-panel" inert={detail ? true : undefined}>
-            <div className="panel-title">Grodno Roads</div>
-            <div role="group" aria-label="Слои карты">
+            <div className="panel-title">Слои карты</div>
+            <div className="panel-group" role="group" aria-label="Слои карты">
               <label className="panel-row">
                 <input
                   type="checkbox"
@@ -246,6 +246,8 @@ export default function MapScreen() {
                   }
                 />
                 Стационарные камеры
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="panel-row-icon" src="/icons/camera.svg" alt="" />
               </label>
               <label className="panel-row">
                 <input
@@ -256,6 +258,8 @@ export default function MapScreen() {
                   }
                 />
                 Средняя скорость
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="panel-row-icon" src="/icons/medium-speed.svg" alt="" />
               </label>
               <label className="panel-row">
                 <input
@@ -266,6 +270,8 @@ export default function MapScreen() {
                   }
                 />
                 Ремонты дорог
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="panel-row-icon" src="/icons/road-repairs-point.svg" alt="" />
               </label>
             </div>
             <div className="panel-footer" aria-live="polite">
