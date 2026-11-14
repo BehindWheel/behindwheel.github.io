@@ -8,6 +8,7 @@ import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { loadCdnData, type CdnData } from "@/lib/cdn";
 import { createMap, onStyleLoad } from "@/lib/map/createMap";
+import { getTheme, onThemeChange, setTheme, type Theme } from "@/lib/theme";
 import {
   addMarkerGroups,
   bindMarkerSelections,
@@ -201,6 +202,15 @@ export default function MapScreen() {
     void loadData(map);
   }, [loadData]);
 
+  // The theme toggle: an explicit choice rides localStorage through
+  // setTheme; with no choice the device scheme wins and this state follows
+  // its flips via the store subscription.
+  const [theme, setThemeState] = useState<Theme>(getTheme);
+  useEffect(() => onThemeChange(() => setThemeState(getTheme())), []);
+  const toggleTheme = useCallback(() => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  }, [theme]);
+
   const closeDetail = useCallback(() => setSelected(null), []);
   const detail = useMemo(
     () => (data && selected ? findDetail(data, selected) : null),
@@ -232,6 +242,44 @@ export default function MapScreen() {
               strokeLinejoin="round"
             />
           </svg>
+        </button>
+        <button
+          type="button"
+          className="filter-button theme-button"
+          aria-label={theme === "dark" ? "Светлая тема" : "Тёмная тема"}
+          title={theme === "dark" ? "Светлая тема" : "Тёмная тема"}
+          onClick={toggleTheme}
+        >
+          {theme === "dark" ? (
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle
+                cx="12"
+                cy="12"
+                r="4.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              />
+              <path
+                d="M12 2.5V5M12 19v2.5M2.5 12H5M19 12h2.5M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M19.4 4.6l-1.8 1.8M6.4 17.6l-1.8 1.8"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M20.2 14.4A8.5 8.5 0 0 1 9.6 3.8a8.5 8.5 0 1 0 10.6 10.6z"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          )}
         </button>
         {filtersOpen && (
           <div className="panel" id="layer-panel" inert={detail ? true : undefined}>

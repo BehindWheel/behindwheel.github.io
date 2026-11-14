@@ -1,11 +1,14 @@
 import * as maplibregl from "maplibre-gl";
+import { getTheme, onThemeChange, type Theme } from "../theme";
 import { BELARUS_BOUNDS, DARK_MAP_STYLE, LIGHT_MAP_STYLE } from "./style";
 
-// The basemap follows the color scheme: Liberty in light, Dark in dark.
-// setStyle() wipes sources and layers wholesale — the style.load replay
-// redraws the overlays on top of whichever style wins, and the DOM sign
-// markers survive the swap on their own.
-const darkScheme = window.matchMedia("(prefers-color-scheme: dark)");
+// The basemap follows the theme store (an explicit choice or the device
+// scheme): Liberty in light, Dark in dark. setStyle() wipes sources and
+// layers wholesale — the style.load replay redraws the overlays on top of
+// whichever style wins, and the DOM sign markers survive the swap on their
+// own.
+const styleFor = (theme: Theme): string =>
+  theme === "dark" ? DARK_MAP_STYLE : LIGHT_MAP_STYLE;
 
 // v6 ships ESM-only and spawns its worker from a URL. Turbopack resolves that
 // URL to a virtual /_next/static/media/maplibre-gl-worker.mjs?v=… that never
@@ -21,9 +24,10 @@ maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
 // attribution control is off (the user's call, 2026-11-14, like the
 // dashboard's).
 export function createMap(container: HTMLElement): maplibregl.Map {
+  let appliedStyle = styleFor(getTheme());
   const map = new maplibregl.Map({
     container,
-    style: darkScheme.matches ? DARK_MAP_STYLE : LIGHT_MAP_STYLE,
+    style: appliedStyle,
     bounds: BELARUS_BOUNDS,
     attributionControl: false,
   });
@@ -34,8 +38,12 @@ export function createMap(container: HTMLElement): maplibregl.Map {
     new maplibregl.GeolocateControl({ positionOptions: { enableHighAccuracy: true } }),
     "bottom-right",
   );
-  darkScheme.addEventListener("change", (event) => {
-    map.setStyle(event.matches ? DARK_MAP_STYLE : LIGHT_MAP_STYLE);
+  onThemeChange(() => {
+    const next = styleFor(getTheme());
+    if (next !== appliedStyle) {
+      appliedStyle = next;
+      map.setStyle(next);
+    }
   });
   return map;
 }
