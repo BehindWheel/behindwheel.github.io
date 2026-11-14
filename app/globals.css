@@ -201,6 +201,21 @@ div.map-container {
   height: 32px;
 }
 
+/* The logo is a round yellow disc with dark slate lettering: on the light
+   card the disc melts into the white fill, so it wears a dark ring in its
+   own stroke color; on the dark card the lettering sits on transparent fill
+   and vanishes, so it gets a white chip instead. The store badges carry
+   their own black cards. */
+.app-banner > img {
+  border-radius: 50%;
+  border: 1.5px solid #232f34;
+}
+
+:root[data-theme="dark"] .app-banner > img {
+  background: #ffffff;
+  border: none;
+}
+
 .app-banner-text {
   display: flex;
   flex: 1;
