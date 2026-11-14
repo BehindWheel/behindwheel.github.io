@@ -69,18 +69,90 @@ div.map-container {
   font-size: 11px;
 }
 
-.panel {
+/* MapLibre expands the attribution text on wide containers even in compact
+   mode; the legal info stays reachable but collapsed to the ⓘ button. */
+.map-container
+  .maplibregl-ctrl-attrib.maplibregl-compact-show
+  .maplibregl-ctrl-attrib-inner {
+  display: none;
+}
+
+.map-container .maplibregl-ctrl-attrib:hover .maplibregl-ctrl-attrib-inner,
+.map-container .maplibregl-ctrl-attrib:focus-within .maplibregl-ctrl-attrib-inner {
+  display: block;
+}
+
+/* The round filter toggle sits top-left; the layer panel opens under it and
+   stays off the map while nobody needs it. Both are always white with dark
+   text — a map surface, not a themed surface. */
+.filter-button {
   position: absolute;
   top: 12px;
-  right: 12px;
+  left: 12px;
+  z-index: 10;
+  display: flex;
+  width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  color: #18181b;
+  background: #ffffff;
+  border: 1px solid #d4d4d8;
+  border-radius: 50%;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+}
+
+.filter-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.panel {
+  position: absolute;
+  top: 68px;
+  left: 12px;
   z-index: 10;
   min-width: 220px;
   padding: 12px 14px;
-  background: var(--panel-bg);
-  border: 1px solid var(--panel-border);
+  color: #18181b;
+  background: #ffffff;
+  border: 1px solid #d4d4d8;
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(6px);
+  animation: panel-fade 150ms ease-out;
+}
+
+.panel-footer {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #d4d4d8;
+  font-size: 12px;
+  color: #52525b;
+}
+
+.panel-error {
+  color: #dc2626;
+}
+
+.panel-error button {
+  border: none;
+  background: none;
+  color: #2563eb;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+@keyframes panel-fade {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .panel-title {
@@ -102,33 +174,12 @@ div.map-container {
 .panel-row input {
   width: 18px;
   height: 18px;
-  accent-color: var(--accent);
+  accent-color: #2563eb;
 }
 
 :focus-visible {
   outline: 2px solid var(--accent-text);
   outline-offset: 2px;
-}
-
-.panel-footer {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid var(--panel-border);
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.panel-error {
-  color: var(--danger);
-}
-
-.panel-error button {
-  border: none;
-  background: none;
-  color: var(--accent-text);
-  font: inherit;
-  text-decoration: underline;
-  cursor: pointer;
 }
 
 /* The detail drawer (components/DetailPanel.tsx), sized and animated by the

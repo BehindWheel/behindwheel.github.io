@@ -20,7 +20,6 @@ import {
   LAYER_IDS,
   setLayerVisibility,
 } from "@/lib/map/overlays";
-import { LIBERTY_STYLE, SATELLITE_STYLE } from "@/lib/map/style";
 
 type LayerToggles = {
   stationary: boolean;
@@ -66,7 +65,7 @@ export default function MapScreen() {
     mediumSpeed: true,
     repairs: true,
   });
-  const [satellite, setSatellite] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -145,14 +144,6 @@ export default function MapScreen() {
     }
   }, [toggles, status]);
 
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map) {
-      return;
-    }
-    map.setStyle(satellite ? SATELLITE_STYLE : LIBERTY_STYLE);
-  }, [satellite]);
-
   const retry = useCallback(() => {
     const map = mapRef.current;
     if (!map) {
@@ -171,63 +162,73 @@ export default function MapScreen() {
   return (
     <div className="screen">
       <div ref={containerRef} className="map-container" inert={detail ? true : undefined} />
-      <div className="panel" inert={detail ? true : undefined}>
-        <div className="panel-title">Grodno Roads</div>
-        <div role="group" aria-label="Слои карты">
-          <label className="panel-row">
-            <input
-              type="checkbox"
-              checked={toggles.stationary}
-              onChange={(event) =>
-                setToggles((prev) => ({ ...prev, stationary: event.target.checked }))
-              }
-            />
-            Стационарные камеры
-          </label>
-          <label className="panel-row">
-            <input
-              type="checkbox"
-              checked={toggles.mediumSpeed}
-              onChange={(event) =>
-                setToggles((prev) => ({ ...prev, mediumSpeed: event.target.checked }))
-              }
-            />
-            Средняя скорость
-          </label>
-          <label className="panel-row">
-            <input
-              type="checkbox"
-              checked={toggles.repairs}
-              onChange={(event) =>
-                setToggles((prev) => ({ ...prev, repairs: event.target.checked }))
-              }
-            />
-            Ремонты дорог
-          </label>
-          <label className="panel-row">
-            <input
-              type="checkbox"
-              checked={satellite}
-              onChange={(event) => setSatellite(event.target.checked)}
-            />
-            Спутник
-          </label>
+      <button
+        type="button"
+        className="filter-button"
+        aria-expanded={filtersOpen}
+        aria-controls="layer-panel"
+        aria-label={filtersOpen ? "Скрыть фильтры" : "Показать фильтры"}
+        onClick={() => setFiltersOpen((open) => !open)}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M3 5h18l-7 8.5V19l-4 2v-7.5L3 5z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+      {filtersOpen && (
+        <div className="panel" id="layer-panel" inert={detail ? true : undefined}>
+          <div className="panel-title">Grodno Roads</div>
+          <div role="group" aria-label="Слои карты">
+            <label className="panel-row">
+              <input
+                type="checkbox"
+                checked={toggles.stationary}
+                onChange={(event) =>
+                  setToggles((prev) => ({ ...prev, stationary: event.target.checked }))
+                }
+              />
+              Стационарные камеры
+            </label>
+            <label className="panel-row">
+              <input
+                type="checkbox"
+                checked={toggles.mediumSpeed}
+                onChange={(event) =>
+                  setToggles((prev) => ({ ...prev, mediumSpeed: event.target.checked }))
+                }
+              />
+              Средняя скорость
+            </label>
+            <label className="panel-row">
+              <input
+                type="checkbox"
+                checked={toggles.repairs}
+                onChange={(event) =>
+                  setToggles((prev) => ({ ...prev, repairs: event.target.checked }))
+                }
+              />
+              Ремонты дорог
+            </label>
+          </div>
+          <div className="panel-footer" aria-live="polite">
+            {status === "loading" && <span>Загрузка данных…</span>}
+            {status === "error" && (
+              <span className="panel-error">
+                Не удалось загрузить данные: {errorMessage}{" "}
+                <button type="button" onClick={retry}>
+                  Повторить
+                </button>
+              </span>
+            )}
+            {status === "ready" && generatedAt && <span>Данные от {generatedAt}</span>}
+          </div>
         </div>
-        <div className="panel-footer" aria-live="polite">
-          {status === "loading" && <span>Загрузка данных…</span>}
-          {status === "error" && (
-            <span className="panel-error">
-              Не удалось загрузить данные: {errorMessage}{" "}
-              <button type="button" onClick={retry}>
-                Повторить
-              </button>
-            </span>
-          )}
-          {status === "ready" && generatedAt && (
-            <span>Данные от {generatedAt}</span>
-          )}
-        </div>
-      </div>
+      )}
       {detail && <DetailPanel detail={detail} onClose={closeDetail} />}
     </div>
   );
