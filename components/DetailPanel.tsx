@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type TouchEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type TouchEvent } from "react";
 import type { MediumSpeedCamera, RoadRepair, StationaryCamera } from "@/lib/cdn";
 
 export type Detail =
@@ -87,6 +87,28 @@ function detailRows(detail: Detail) {
 export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
   const panelRef = useRef<HTMLDivElement | null>(null);
   const touchStartY = useRef<number | null>(null);
+  // The exit plays before the unmount: every close request flips this flag,
+  // the closing animations run, and the real onClose fires on animationend
+  // (with a timer as the fallback for a skipped animation).
+  const [closing, setClosing] = useState(false);
+  const requestClose = useCallback(() => setClosing(true), []);
+
+  useEffect(() => {
+    if (!closing) {
+      return;
+    }
+    // The timer covers a skipped animationend; the handler below normally
+    // unmounts first.
+    const timer = setTimeout(onClose, 400);
+    return () => clearTimeout(timer);
+  }, [closing, onClose]);
+
+  // Entry animations end here too — the flag filters them out.
+  const onPanelAnimationEnd = () => {
+    if (closing) {
+      onClose();
+    }
+  };
 
   const title =
     detail.kind === "repairs" ? detail.repair.road : detail.camera.name;
@@ -99,7 +121,7 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
     panelRef.current?.querySelector("button")?.focus();
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        onClose();
+        requestClose();
       }
     };
     document.addEventListener("keydown", onKey);
@@ -107,7 +129,7 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
       document.removeEventListener("keydown", onKey);
       opener?.focus();
     };
-  }, [onClose]);
+  }, [requestClose]);
 
   // Swipe the sheet down past ~80px to close; a shorter drag springs back.
   const onTouchStart = (event: TouchEvent<HTMLDivElement>) => {
@@ -133,7 +155,7 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
     const dy = /translateY\((\d+)/.exec(panel.style.transform);
     panel.style.transform = "";
     if (dy && Number(dy[1]) > 80) {
-      onClose();
+      requestClose();
       return;
     }
     panel.style.transition = "transform 200ms ease-out";
@@ -144,13 +166,17 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
 
   return (
     <>
-      <div className="detail-backdrop" onClick={onClose} />
+      <div
+        className={`detail-backdrop${closing ? " detail-closing" : ""}`}
+        onClick={requestClose}
+      />
       <div
         ref={panelRef}
-        className="detail-panel"
+        className={`detail-panel${closing ? " detail-closing" : ""}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="detail-title"
+        onAnimationEnd={onPanelAnimationEnd}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
@@ -163,7 +189,7 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
           <button
             type="button"
             className="detail-close"
-            onClick={onClose}
+            onClick={requestClose}
             aria-label="Закрыть"
           >
             ✕
