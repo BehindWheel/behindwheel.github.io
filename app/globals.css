@@ -663,6 +663,18 @@ div.map-container {
   --icon: url("/icons/truck.svg");
 }
 
+.icon-filter {
+  --icon: url("/icons/filter.svg");
+}
+
+.icon-sun {
+  --icon: url("/icons/sun.svg");
+}
+
+.icon-moon {
+  --icon: url("/icons/moon.svg");
+}
+
 .speed-value {
   display: inline-flex;
   gap: 4px;

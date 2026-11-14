@@ -232,16 +232,7 @@ export default function MapScreen() {
           aria-label={filtersOpen ? "Скрыть фильтры" : "Показать фильтры"}
           onClick={() => setFiltersOpen((open) => !open)}
         >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              d="M3 5h18l-7 8v5l-4 2v-7L3 5z"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <span className="svg-icon icon-filter" aria-hidden="true" />
         </button>
         <button
           type="button"
@@ -250,36 +241,10 @@ export default function MapScreen() {
           title={theme === "dark" ? "Светлая тема" : "Тёмная тема"}
           onClick={toggleTheme}
         >
-          {theme === "dark" ? (
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <circle
-                cx="12"
-                cy="12"
-                r="4.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-              />
-              <path
-                d="M12 2.5V5M12 19v2.5M2.5 12H5M19 12h2.5M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M19.4 4.6l-1.8 1.8M6.4 17.6l-1.8 1.8"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
-          ) : (
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                d="M20.2 14.4A8.5 8.5 0 0 1 9.6 3.8a8.5 8.5 0 1 0 10.6 10.6z"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          )}
+          <span
+            className={`svg-icon ${theme === "dark" ? "icon-sun" : "icon-moon"}`}
+            aria-hidden="true"
+          />
         </button>
         {filtersOpen && (
           <div className="panel" id="layer-panel" inert={detail ? true : undefined}>
