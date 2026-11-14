@@ -104,14 +104,15 @@ function bindGroupClicks<T extends { id: string }>(
 
 function buildGroup<T extends { id: string }>(
   items: T[],
-  markerAt: (item: T) => maplibregl.Marker,
+  markersAt: (item: T) => maplibregl.Marker[],
 ): MarkerGroup<T> {
   const group: MarkerGroup<T> = { markers: [], itemById: new Map() };
   for (const item of items) {
     group.itemById.set(item.id, item);
-    const marker = markerAt(item);
-    marker.getElement().dataset.id = item.id;
-    group.markers.push(marker);
+    for (const marker of markersAt(item)) {
+      marker.getElement().dataset.id = item.id;
+      group.markers.push(marker);
+    }
   }
   return group;
 }
@@ -124,29 +125,49 @@ export function createMarkerGroups(data: {
   return {
     stationary: buildGroup(
       data.stationary.filter((camera) => camera.point),
-      (camera) =>
+      (camera) => [
         createSignMarker({ icon: ICONS.camera }).setLngLat([
           camera.point.lng,
           camera.point.lat,
         ]),
+      ],
     ),
     mediumSpeed: buildGroup(
       data.mediumSpeed.filter((camera) => camera.points.length > 0),
-      (camera) =>
+      (camera) => [
         createSignMarker({ icon: ICONS.mediumSpeed }).setLngLat([
           camera.points[0].lng,
           camera.points[0].lat,
         ]),
+      ],
     ),
     repairs: buildGroup(
-      data.repairs.filter((repair) => repair.point ?? repair.points?.length),
+      data.repairs.filter(
+        (repair) => repair.type === "point" ? repair.point : repair.points?.length,
+      ),
       (repair) => {
-        // A point work sits at its point; a stretch wears its sign at the
-        // first vertex of the polyline (road-repairs-point.svg vs road-repairs.svg).
-        const at = repair.point ?? repair.points![0];
-        return createSignMarker({
-          icon: repair.type === "point" ? ICONS.repairsPoint : ICONS.repairsLine,
-        }).setLngLat([at.lng, at.lat]);
+        // A point work wears the warning sign at its point; a stretch wears
+        // the barrier sign at both ends of its polyline (road-repairs-point.svg
+        // vs road-repairs.svg). A one-vertex polyline gets a single sign.
+        if (repair.type === "point") {
+          return [
+            createSignMarker({ icon: ICONS.repairsPoint }).setLngLat([
+              repair.point!.lng,
+              repair.point!.lat,
+            ]),
+          ];
+        }
+        const points = repair.points!;
+        const ends =
+          points.length > 1
+            ? [points[0], points[points.length - 1]]
+            : [points[0]];
+        return ends.map((at) =>
+          createSignMarker({ icon: ICONS.repairsLine }).setLngLat([
+            at.lng,
+            at.lat,
+          ]),
+        );
       },
     ),
   };
