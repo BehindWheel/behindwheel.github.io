@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light;
   --panel-bg: rgba(255, 255, 255, 0.92);
   --panel-border: #d4d4d8;
   --panel-hover: #f5f5f5;
@@ -10,18 +11,20 @@
   --error-text: #dc2626;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --panel-bg: rgba(24, 24, 27, 0.92);
-    --panel-border: #3f3f46;
-    --panel-hover: #27272a;
-    --foreground: #fafafa;
-    /* #2563eb drops to 3.25:1 on the dark panel — text takes the lighter blue
-       (7.74:1); the checkbox accent stays #2563eb, a UI component needs 3:1. */
-    --muted: #c4c9d4;
-    --accent-text: #7cb3f8;
-    --error-text: #f87171;
-  }
+/* The resolved theme rides <html data-theme> — the inline head script in
+   layout.tsx stamps it from the stored choice or the device scheme before
+   the first paint, so every themed surface keys off the attribute. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --panel-bg: rgba(24, 24, 27, 0.92);
+  --panel-border: #3f3f46;
+  --panel-hover: #27272a;
+  --foreground: #fafafa;
+  /* #2563eb drops to 3.25:1 on the dark panel — text takes the lighter blue
+     (7.74:1); the checkbox accent stays #2563eb, a UI component needs 3:1. */
+  --muted: #c4c9d4;
+  --accent-text: #7cb3f8;
+  --error-text: #f87171;
 }
 
 * {
@@ -131,8 +134,13 @@ div.map-container {
 }
 
 /* Fluent glyphs instead of the stock sprites: the mask draws the icon in
-   currentColor, the same trick as the dashboard's .svg-icon. */
-.map-container .maplibregl-ctrl button .maplibregl-ctrl-icon {
+   currentColor, the same trick as the dashboard's .svg-icon. The extra
+   class outranks maplibre.css's own icon background-image (a tie falls to
+   its later sheet, and the baked black glyphs surfaced on the dark theme). */
+.map-container
+  .maplibregl-ctrl.maplibregl-ctrl-group
+  button
+  .maplibregl-ctrl-icon {
   width: 18px;
   height: 18px;
   background-color: currentcolor;
@@ -309,6 +317,11 @@ div.map-container {
 
 .filter-button:hover {
   background: var(--panel-hover);
+}
+
+/* the theme toggle rides right of the filter toggle, the same 34px round */
+.theme-button {
+  left: 54px;
 }
 
 .filter-button svg {
