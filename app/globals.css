@@ -342,7 +342,6 @@ div.map-container {
 
 .panel-group {
   display: block;
-  padding: 4px 0;
 }
 
 .panel-row-icon {
@@ -467,6 +466,9 @@ div.map-container {
     left: auto;
     width: 360px;
     max-height: none;
+    /* the 8px top padding belongs to the mobile sheet with its handle; the
+       bare desktop panel breathes from the top edge */
+    padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
     border-radius: 0;
     animation: detail-slide-right 250ms cubic-bezier(0, 0, 0.2, 1);
   }
