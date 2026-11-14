@@ -5,19 +5,19 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { loadCdnData, type CdnData } from "@/lib/cdn";
 import {
-  addStationaryMarkers,
+  addMarkerGroups,
   applyOverlays,
   BELARUS_BOUNDS,
   bindLayerPopups,
   bindMarkerPopups,
-  createStationaryMarkers,
+  createMarkerGroups,
   LAYER_IDS,
   LIBERTY_STYLE,
   onStyleLoad,
   SATELLITE_STYLE,
   setLayerVisibility,
   setMarkersVisibility,
-  type StationaryMarkerRegistry,
+  type MarkerGroups,
 } from "@/lib/map-overlays";
 
 type LayerToggles = {
@@ -29,14 +29,14 @@ type LayerToggles = {
 const LAYER_TO_LAYERS: Record<keyof LayerToggles, string[]> = {
   stationary: [],
   mediumSpeed: [LAYER_IDS.mediumSpeed],
-  repairs: [LAYER_IDS.repairsLines, LAYER_IDS.repairsPoints],
+  repairs: [LAYER_IDS.repairsLines],
 };
 
 export default function MapScreen() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const dataRef = useRef<CdnData | null>(null);
-  const markersRef = useRef<StationaryMarkerRegistry | null>(null);
+  const markersRef = useRef<MarkerGroups | null>(null);
   const [toggles, setToggles] = useState<LayerToggles>({
     stationary: true,
     mediumSpeed: true,
@@ -52,8 +52,8 @@ export default function MapScreen() {
       const data = await loadCdnData();
       dataRef.current = data;
       if (!markersRef.current) {
-        markersRef.current = createStationaryMarkers(data.stationary);
-        addStationaryMarkers(map, markersRef.current);
+        markersRef.current = createMarkerGroups(data);
+        addMarkerGroups(map, markersRef.current);
         bindMarkerPopups(map, markersRef.current);
       }
       applyOverlays(map, data);
@@ -108,7 +108,7 @@ export default function MapScreen() {
 
   useEffect(() => {
     const map = mapRef.current;
-    const registry = markersRef.current;
+    const groups = markersRef.current;
     if (!map) {
       return;
     }
@@ -116,8 +116,8 @@ export default function MapScreen() {
       for (const layerId of LAYER_TO_LAYERS[key]) {
         setLayerVisibility(map, layerId, toggles[key]);
       }
+      setMarkersVisibility(groups?.[key].markers ?? [], toggles[key]);
     }
-    setMarkersVisibility(registry?.markers ?? [], toggles.stationary);
   }, [toggles, status]);
 
   useEffect(() => {

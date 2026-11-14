@@ -117,33 +117,65 @@ div.map-container {
   cursor: pointer;
 }
 
-/* Stationary camera marker: rotated direction arrow with a speed badge. */
-.camera-marker {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-  width: 34px;
-  height: 40px;
+/* Sign markers — the dashboard marker convention (ui/map/markers.js + map.css):
+   an <img> sign inside .marker-body, 18x20, the maplibregl root anchored bottom.
+   The skins here only restyle sizes/colors; the marker root must keep the
+   absolute positioning maplibregl.css gives it. */
+.sign-marker {
+  position: relative;
   cursor: pointer;
 }
 
-.camera-marker-arrow {
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 0 8px 22px 8px;
-  border-color: transparent transparent var(--accent) transparent;
+.marker-body {
+  position: relative;
+  display: block;
 }
 
-.camera-marker-speed {
-  padding: 0 5px;
-  font-size: 10px;
+.sign-marker img {
+  width: 18px;
+  height: 20px;
+  display: block;
+}
+
+/* Thin direction ray above the sign, rotated from north by the camera angle —
+   the read-only echo of the dashboard rays. */
+.marker-ray {
+  position: absolute;
+  bottom: 16px;
+  left: calc(50% - 1px);
+  width: 2px;
+  height: 16px;
+  background: rgba(37, 99, 235, 0.8);
+  border-radius: 1px;
+  transform-origin: bottom center;
+}
+
+.marker-speed-badge {
+  position: absolute;
+  bottom: -7px;
+  left: calc(50% - 14px);
+  width: 28px;
+  padding: 0 3px;
+  font-size: 9px;
   font-weight: 700;
-  line-height: 15px;
+  line-height: 13px;
+  text-align: center;
   color: #ffffff;
   background: var(--accent);
   border-radius: 7px;
+  white-space: nowrap;
+}
+
+.marker-verified-badge {
+  position: absolute;
+  top: -3px;
+  right: -5px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid #ffffff;
+  background: #0e700e;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
 }
 
 .site-popup {
