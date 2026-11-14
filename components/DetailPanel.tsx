@@ -105,7 +105,6 @@ function detailRows(detail: Detail) {
         <Row label="Ограничение" value={`${repair.speed} км/ч`} />
       )}
       {repair.note && <Row label="Заметка" value={repair.note} />}
-      <Row label="Проверено" value={repair.verified ? "Да" : "Нет"} />
       <Row label="Область" value={regionName(repair.region)} />
       <Row label="Обновлено" value={formatDate(repair.updateTime)} />
     </>
