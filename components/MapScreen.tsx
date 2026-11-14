@@ -172,10 +172,11 @@ export default function MapScreen() {
       >
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path
-            d="M3 5h18l-7 8.5V19l-4 2v-7.5L3 5z"
+            d="M3 5h18l-7 8v5l-4 2v-7L3 5z"
             fill="none"
             stroke="currentColor"
-            strokeWidth="1.8"
+            strokeWidth="1.5"
+            strokeLinecap="round"
             strokeLinejoin="round"
           />
         </svg>
