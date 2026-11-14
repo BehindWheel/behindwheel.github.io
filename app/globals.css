@@ -95,7 +95,7 @@ div.map-container {
   display: none;
 }
 
-/* Map controls in the dashboard's Fluent skin — a white 8px card with the
+/* Map controls in the dashboard's Fluent skin — a themed 8px card with the
    soft shadow, 34px square buttons with a hairline divider (the two-class
    selector outranks maplibregl.css's own group skin and its per-button
    rounding). A single-button card — the geolocate ⌖ — reads better round. */
@@ -103,7 +103,7 @@ div.map-container {
   border: none;
   border-radius: 8px;
   overflow: hidden;
-  background: #ffffff;
+  background: var(--panel-bg);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
 }
 
@@ -113,16 +113,16 @@ div.map-container {
   height: 34px;
   align-items: center;
   justify-content: center;
-  color: #242424;
+  color: var(--foreground);
   background: transparent;
 }
 
 .map-container .maplibregl-ctrl.maplibregl-ctrl-group button + button {
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--panel-border);
 }
 
 .map-container .maplibregl-ctrl.maplibregl-ctrl-group button:hover {
-  background: #f5f5f5;
+  background: var(--panel-hover);
 }
 
 .map-container
@@ -168,8 +168,8 @@ div.map-container {
   margin-top: 10px;
 }
 
-/* The install banner sits above the map in the page flow — the same white
-   Fluent card as every other map surface. Both store links show on all
+/* The install banner sits above the map in the page flow — the same themed
+   Fluent card as every other surface. Both store links show on all
    platforms; dismissal is remembered for 7 days in localStorage (Safari's ITP
    wipes script-written storage after 7 days anyway, so the TTL matches). */
 .app-banner {
@@ -178,9 +178,9 @@ div.map-container {
   flex: none;
   align-items: center;
   padding: 8px 8px 8px 12px;
-  color: #242424;
-  background: #ffffff;
-  border-bottom: 1px solid #e0e0e0;
+  color: var(--foreground);
+  background: var(--panel-bg);
+  border-bottom: 1px solid var(--panel-border);
 }
 
 .app-banner img {
@@ -212,7 +212,7 @@ div.map-container {
   -webkit-line-clamp: 2;
   overflow: hidden;
   font-size: 12px;
-  color: #52525b;
+  color: var(--muted);
 }
 
 .app-banner-links {
@@ -242,7 +242,7 @@ div.map-container {
   height: 34px;
   align-items: center;
   justify-content: center;
-  color: #242424;
+  color: var(--foreground);
   background: none;
   border: none;
   border-radius: 8px;
@@ -251,7 +251,7 @@ div.map-container {
 }
 
 .app-banner-close:hover {
-  background: #f5f5f5;
+  background: var(--panel-hover);
 }
 
 /* on a narrow screen the two badges leave the text column too little width —
