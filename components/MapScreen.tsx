@@ -4,21 +4,21 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { loadCdnData, type CdnData } from "@/lib/cdn";
+import { createMap, onStyleLoad } from "@/lib/map/createMap";
 import {
   addMarkerGroups,
-  applyOverlays,
-  BELARUS_BOUNDS,
-  bindLayerPopups,
   bindMarkerPopups,
   createMarkerGroups,
-  LAYER_IDS,
-  LIBERTY_STYLE,
-  onStyleLoad,
-  SATELLITE_STYLE,
-  setLayerVisibility,
   setMarkersVisibility,
   type MarkerGroups,
-} from "@/lib/map-overlays";
+} from "@/lib/map/markers";
+import {
+  applyOverlays,
+  bindLayerPopups,
+  LAYER_IDS,
+  setLayerVisibility,
+} from "@/lib/map/overlays";
+import { LIBERTY_STYLE, SATELLITE_STYLE } from "@/lib/map/style";
 
 type LayerToggles = {
   stationary: boolean;
@@ -71,17 +71,8 @@ export default function MapScreen() {
     if (!container) {
       return;
     }
-    const map = new maplibregl.Map({
-      container,
-      style: LIBERTY_STYLE,
-      bounds: BELARUS_BOUNDS,
-    });
+    const map = createMap(container);
     mapRef.current = map;
-    map.addControl(new maplibregl.NavigationControl(), "bottom-left");
-    map.addControl(
-      new maplibregl.GeolocateControl({ positionOptions: { enableHighAccuracy: true } }),
-      "bottom-left",
-    );
 
     const load = () => void loadData(map);
 
