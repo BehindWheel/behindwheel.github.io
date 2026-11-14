@@ -66,67 +66,132 @@ div.map-container {
 }
 
 .map-container .maplibregl-ctrl-attrib {
-  font-size: 11px;
-}
-
-/* MapLibre expands the attribution text on wide containers even in compact
-   mode; the legal info stays reachable but collapsed to the ⓘ button. */
-.map-container
-  .maplibregl-ctrl-attrib.maplibregl-compact-show
-  .maplibregl-ctrl-attrib-inner {
   display: none;
 }
 
-.map-container .maplibregl-ctrl-attrib:hover .maplibregl-ctrl-attrib-inner,
-.map-container .maplibregl-ctrl-attrib:focus-within .maplibregl-ctrl-attrib-inner {
-  display: block;
+/* Map controls in the dashboard's Fluent skin — a white 8px card with the
+   soft shadow, 34px square buttons with a hairline divider (the two-class
+   selector outranks maplibregl.css's own group skin and its per-button
+   rounding). A single-button card — the geolocate ⌖ — reads better round. */
+.map-container .maplibregl-ctrl.maplibregl-ctrl-group {
+  border: none;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
 }
 
-/* The round filter toggle sits top-left; the layer panel opens under it and
-   stays off the map while nobody needs it. Both are always white with dark
-   text — a map surface, not a themed surface. */
+.map-container .maplibregl-ctrl.maplibregl-ctrl-group button {
+  display: flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  color: #242424;
+  background: transparent;
+}
+
+.map-container .maplibregl-ctrl.maplibregl-ctrl-group button + button {
+  border-top: 1px solid #e0e0e0;
+}
+
+.map-container .maplibregl-ctrl.maplibregl-ctrl-group button:hover {
+  background: #f5f5f5;
+}
+
+.map-container
+  .maplibregl-ctrl.maplibregl-ctrl-group:has(> button.maplibregl-ctrl-geolocate) {
+  border-radius: 50%;
+}
+
+/* Fluent glyphs instead of the stock sprites: the mask draws the icon in
+   currentColor, the same trick as the dashboard's .svg-icon. */
+.map-container .maplibregl-ctrl button .maplibregl-ctrl-icon {
+  width: 18px;
+  height: 18px;
+  background-color: currentcolor;
+  background-image: none;
+}
+
+.map-container .maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon {
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E")
+    no-repeat center / contain;
+}
+
+.map-container .maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon {
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M5 12h14'/%3E%3C/svg%3E")
+    no-repeat center / contain;
+}
+
+.map-container .maplibregl-ctrl-geolocate .maplibregl-ctrl-icon {
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='8'/%3E%3Cpath d='M22 12h-4M6 12H2M12 6V2M12 22v-4'/%3E%3C/svg%3E")
+    no-repeat center / contain;
+}
+
+/* the control cards stack with a breathing gap, at the same 12px inset as
+   the filter button's corner (the ⓘ attribution rides the same container) */
+.map-container .maplibregl-ctrl-bottom-right {
+  padding: 0 12px 12px 0;
+}
+
+.map-container .maplibregl-ctrl-bottom-right .maplibregl-ctrl {
+  margin: 0;
+}
+
+.map-container .maplibregl-ctrl-bottom-right .maplibregl-ctrl + .maplibregl-ctrl {
+  margin-top: 10px;
+}
+
+/* The filter toggle sits top-left; the layer panel opens under it and stays
+   off the map while nobody needs it. Both are always white with dark text — a
+   map surface, not a themed surface. The skin is the dashboard's Fluent card:
+   8px corners, no border, the soft shadow-2/shadow-16 tokens, 34px buttons. */
 .filter-button {
   position: absolute;
   top: 12px;
   left: 12px;
   z-index: 10;
   display: flex;
-  width: 48px;
-  height: 48px;
+  width: 34px;
+  height: 34px;
   align-items: center;
   justify-content: center;
-  color: #18181b;
+  color: #242424;
   background: #ffffff;
-  border: 1px solid #d4d4d8;
+  border: none;
   border-radius: 50%;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
   cursor: pointer;
 }
 
+.filter-button:hover {
+  background: #f5f5f5;
+}
+
 .filter-button svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
 .panel {
   position: absolute;
-  top: 68px;
+  top: 64px;
   left: 12px;
   z-index: 10;
   min-width: 220px;
   padding: 12px 14px;
   color: #18181b;
   background: #ffffff;
-  border: 1px solid #d4d4d8;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  border: 1px solid #d1d1d1;
+  border-radius: 8px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
   animation: panel-fade 150ms ease-out;
 }
 
 .panel-footer {
   margin-top: 8px;
   padding-top: 8px;
-  border-top: 1px solid #d4d4d8;
+  border-top: 1px solid #e0e0e0;
   font-size: 12px;
   color: #52525b;
 }
