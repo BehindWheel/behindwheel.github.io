@@ -42,6 +42,9 @@ body {
   height: 100%;
   overflow: hidden;
   color: var(--foreground);
+  /* the dashboard's tap-highlight kill: Android paints a square blue flash
+     over round buttons on tap — the highlight inherits everywhere from here */
+  -webkit-tap-highlight-color: transparent;
   font-family:
     system-ui,
     -apple-system,
@@ -204,16 +207,17 @@ div.map-container {
 /* The logo is a round yellow disc with dark slate lettering: on the light
    card the disc melts into the white fill, so it wears a dark ring in its
    own stroke color; on the dark card the lettering sits on transparent fill
-   and vanishes, so it gets a white chip instead. The store badges carry
-   their own black cards. */
+   and vanishes, so it gets a white chip instead. The ring is an inset
+   shadow, not a border — a border would shrink the artwork between themes.
+   The store badges carry their own black cards. */
 .app-banner > img {
   border-radius: 50%;
-  border: 1.5px solid #232f34;
+  box-shadow: inset 0 0 0 0.5px rgba(35, 47, 52, 0.35);
 }
 
 :root[data-theme="dark"] .app-banner > img {
   background: #ffffff;
-  border: none;
+  box-shadow: none;
 }
 
 .app-banner-text {
