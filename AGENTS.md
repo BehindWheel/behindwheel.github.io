@@ -8,6 +8,12 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
+## Icons
+
+- Icons are SVG only — no icon fonts, no baked-in colors. A reused icon lives as a file in `public/icons/` and draws through the mask trick (`background: currentcolor; mask: url(...)`), so it recolors with the theme; an `<img>` freezes the file's own colors and is reserved for artwork.
+- One-off stateful glyphs (the filter funnel, the theme sun/moon) may stay inline SVG in the component, also in `currentColor`.
+- The store badges are the stores' artwork, not icons — PNG as shipped.
+
 ## Branches & PRs
 
 - Work always happens on a fresh branch cut from the latest `main` — fetch first (`git fetch origin main && git checkout -b <name> origin/main`); never commit to `main` directly.
