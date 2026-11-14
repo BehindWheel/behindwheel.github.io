@@ -22,22 +22,21 @@ type DetailPanelProps = {
 };
 
 // The dashboard's speed meta (screens/speed: the CAR_ICON/TRUCK_ICON pair
-// over the same mask-drawn svg-icons): each limit reads icon + number, and
-// the truck figure only appears when the CDN carries one.
+// over the same mask-drawn svg-icons): each limit reads icon + number with
+// its own unit, and the truck figure only appears when the CDN carries one.
 function SpeedValue({ car, truck }: { car: number; truck: number }) {
   return (
     <span className="speed-value">
       <span className="speed-limit">
         <span className="svg-icon icon-car" aria-hidden="true" />
-        {car}
+        {car} км/ч
       </span>
       {truck > 0 && (
         <span className="speed-limit">
           <span className="svg-icon icon-truck" aria-hidden="true" />
-          {truck}
+          {truck} км/ч
         </span>
       )}
-      км/ч
     </span>
   );
 }
