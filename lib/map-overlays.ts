@@ -45,6 +45,11 @@ export const LAYER_IDS = {
   repairsLines: "repairs-line",
 } as const;
 
+// The dashboard design tokens (uikit/colors.js): medium-speed sections paint
+// with the accent, curated repair stretches with the brown repairs-line.
+const MEDIUM_SPEED_COLOR = "#0f6cbd";
+const REPAIRS_LINE_COLOR = "#7b4a21";
+
 // One GeoJSON source per logical layer; a redraw replaces `data` and never
 // stacks sources or layers (same rule as the private dashboard overlays).
 // Point features do not live in sources at all — they are DOM sign markers
@@ -285,7 +290,7 @@ export function applyOverlays(map: maplibregl.Map, data: CdnData): void {
       type: "line",
       source: "medium-speed",
       paint: {
-        "line-color": "#2563eb",
+        "line-color": MEDIUM_SPEED_COLOR,
         "line-width": 4,
         "line-opacity": 0.85,
       },
@@ -298,10 +303,9 @@ export function applyOverlays(map: maplibregl.Map, data: CdnData): void {
       type: "line",
       source: "repairs",
       paint: {
-        "line-color": "#ef4444",
-        "line-width": 3,
+        "line-color": REPAIRS_LINE_COLOR,
+        "line-width": 4,
         "line-opacity": 0.9,
-        "line-dasharray": [2, 2],
       },
     });
   }
