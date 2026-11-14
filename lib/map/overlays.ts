@@ -78,7 +78,7 @@ export function applyOverlays(map: maplibregl.Map, data: CdnData): void {
       paint: {
         "line-color": MEDIUM_SPEED_LINE_COLOR,
         "line-width": 4,
-        "line-opacity": 0.85,
+        "line-opacity": 1,
       },
     });
   }
@@ -91,7 +91,7 @@ export function applyOverlays(map: maplibregl.Map, data: CdnData): void {
       paint: {
         "line-color": REPAIRS_LINE_COLOR,
         "line-width": 4,
-        "line-opacity": 0.9,
+        "line-opacity": 1,
       },
     });
   }
