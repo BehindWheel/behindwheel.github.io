@@ -1,60 +1,11 @@
-import type { Feature, FeatureCollection, LineString } from "geojson";
-import type { StyleSpecification } from "maplibre-gl";
+// The DOM markers the map draws with — the dashboard marker convention
+// (ui/map/markers.js + map.css): a sign is an <img> inside .marker-body,
+// sized 18x20, the maplibregl root anchors bottom so the sign's tip sits on
+// the point; the skins live in the sibling map.css.
+
 import maplibregl from "maplibre-gl";
-import type {
-  CdnData,
-  CdnPoint,
-  MediumSpeedCamera,
-  RoadRepair,
-  StationaryCamera,
-} from "./cdn";
-
-export const BELARUS_BOUNDS: [[number, number], [number, number]] = [
-  [23.0, 51.2],
-  [32.9, 56.2],
-];
-
-export const LIBERTY_STYLE = "https://tiles.openfreemap.org/styles/liberty";
-
-// Esri World Imagery is a free raster basemap (max zoom 19) — the same
-// satellite toggle the private dashboard uses.
-export const SATELLITE_STYLE: StyleSpecification = {
-  version: 8,
-  sources: {
-    "esri-satellite": {
-      type: "raster",
-      tiles: [
-        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-      ],
-      tileSize: 256,
-      maxzoom: 19,
-      attribution: "Esri World Imagery",
-    },
-  },
-  layers: [
-    {
-      id: "esri-satellite",
-      type: "raster",
-      source: "esri-satellite",
-    },
-  ],
-};
-
-export const LAYER_IDS = {
-  mediumSpeed: "medium-speed-line",
-  repairsLines: "repairs-line",
-} as const;
-
-// The dashboard design tokens (uikit/colors.js): medium-speed sections paint
-// with the accent, curated repair stretches with the brown repairs-line.
-const MEDIUM_SPEED_COLOR = "#0f6cbd";
-const REPAIRS_LINE_COLOR = "#7b4a21";
-
-// One GeoJSON source per logical layer; a redraw replaces `data` and never
-// stacks sources or layers (same rule as the private dashboard overlays).
-// Point features do not live in sources at all — they are DOM sign markers
-// (the dashboard marker convention: road-repairs-point.svg for a point work).
-const SOURCE_IDS = ["medium-speed", "repairs"] as const;
+import "./map.css";
+import type { MediumSpeedCamera, RoadRepair, StationaryCamera } from "../cdn";
 
 const ICONS = {
   camera: "/icons/camera.svg",
@@ -73,41 +24,6 @@ export type MarkerGroups = {
   mediumSpeed: MarkerGroup<MediumSpeedCamera>;
   repairs: MarkerGroup<RoadRepair>;
 };
-
-const toLineGeometry = (points: CdnPoint[]): LineString => ({
-  type: "LineString",
-  coordinates: points.map((p) => [p.lng, p.lat]),
-});
-
-function mediumSpeedCollection(items: MediumSpeedCamera[]): FeatureCollection<LineString> {
-  return {
-    type: "FeatureCollection",
-    features: items.map(
-      (camera): Feature<LineString> => ({
-        type: "Feature",
-        id: camera.id,
-        geometry: toLineGeometry(camera.points),
-        properties: { id: camera.id },
-      }),
-    ),
-  };
-}
-
-function repairsLineCollection(items: RoadRepair[]): FeatureCollection<LineString> {
-  return {
-    type: "FeatureCollection",
-    features: items
-      .filter((repair) => repair.type === "line")
-      .map(
-        (repair): Feature<LineString> => ({
-          type: "Feature",
-          id: repair.id,
-          geometry: toLineGeometry(repair.points ?? []),
-          properties: { id: repair.id },
-        }),
-      ),
-  };
-}
 
 function speedLabel(car: number, truck: number): string {
   return truck > 0 ? `${car} / ${truck} км/ч` : `${car} км/ч`;
@@ -145,7 +61,7 @@ export function repairPopup(repair: RoadRepair): string {
   );
 }
 
-function showPopup(map: maplibregl.Map, lngLat: maplibregl.LngLat, html: string): void {
+export function showPopup(map: maplibregl.Map, lngLat: maplibregl.LngLat, html: string): void {
   new maplibregl.Popup({ maxWidth: "280px" })
     .setLngLat(lngLat)
     .setHTML(html)
@@ -161,9 +77,6 @@ type SignMarkerOptions = {
   verified?: boolean;
 };
 
-// The dashboard marker convention (ui/map/markers.js): a sign is an <img>
-// inside .marker-body, sized 18x20, the marker root keeps the maplibregl
-// absolute positioning and anchors bottom, so the sign's tip sits on the point.
 function createSignMarker({ icon, rayAngle, verified }: SignMarkerOptions): maplibregl.Marker {
   const element = document.createElement("div");
   element.className = "sign-marker";
@@ -219,7 +132,11 @@ function buildGroup<T extends { id: string }>(
   return group;
 }
 
-export function createMarkerGroups(data: CdnData): MarkerGroups {
+export function createMarkerGroups(data: {
+  stationary: StationaryCamera[];
+  mediumSpeed: MediumSpeedCamera[];
+  repairs: RoadRepair[];
+}): MarkerGroups {
   return {
     stationary: buildGroup(
       data.stationary.filter((camera) => camera.point),
@@ -241,8 +158,7 @@ export function createMarkerGroups(data: CdnData): MarkerGroups {
       data.repairs.filter((repair) => repair.point ?? repair.points?.length),
       (repair) => {
         // A point work sits at its point; a stretch wears its sign at the
-        // first vertex of the polyline (the dashboard marker convention:
-        // road-repairs-point.svg vs road-repairs.svg).
+        // first vertex of the polyline (road-repairs-point.svg vs road-repairs.svg).
         const at = repair.point ?? repair.points![0];
         return createSignMarker({
           icon: repair.type === "point" ? ICONS.repairsPoint : ICONS.repairsLine,
@@ -265,83 +181,6 @@ export function bindMarkerPopups(map: maplibregl.Map, groups: MarkerGroups): voi
   bindGroupClicks(map, groups.stationary, stationaryPopup);
   bindGroupClicks(map, groups.mediumSpeed, mediumSpeedPopup);
   bindGroupClicks(map, groups.repairs, repairPopup);
-}
-
-export function applyOverlays(map: maplibregl.Map, data: CdnData): void {
-  for (const sourceId of SOURCE_IDS) {
-    if (!map.getSource(sourceId)) {
-      map.addSource(sourceId, {
-        type: "geojson",
-        data: { type: "FeatureCollection", features: [] },
-      });
-    }
-  }
-
-  (map.getSource("medium-speed") as maplibregl.GeoJSONSource).setData(
-    mediumSpeedCollection(data.mediumSpeed),
-  );
-  (map.getSource("repairs") as maplibregl.GeoJSONSource).setData(
-    repairsLineCollection(data.repairs),
-  );
-
-  if (!map.getLayer(LAYER_IDS.mediumSpeed)) {
-    map.addLayer({
-      id: LAYER_IDS.mediumSpeed,
-      type: "line",
-      source: "medium-speed",
-      paint: {
-        "line-color": MEDIUM_SPEED_COLOR,
-        "line-width": 4,
-        "line-opacity": 0.85,
-      },
-    });
-  }
-
-  if (!map.getLayer(LAYER_IDS.repairsLines)) {
-    map.addLayer({
-      id: LAYER_IDS.repairsLines,
-      type: "line",
-      source: "repairs",
-      paint: {
-        "line-color": REPAIRS_LINE_COLOR,
-        "line-width": 4,
-        "line-opacity": 0.9,
-      },
-    });
-  }
-}
-
-export function bindLayerPopups(map: maplibregl.Map, data: CdnData): void {
-  map.on("click", LAYER_IDS.mediumSpeed, (event) => {
-    const id = event.features?.[0]?.properties?.id as string | undefined;
-    const camera = data.mediumSpeed.find((item) => item.id === id);
-    if (camera) {
-      showPopup(map, event.lngLat, mediumSpeedPopup(camera));
-    }
-  });
-  map.on("click", LAYER_IDS.repairsLines, (event) => {
-    const id = event.features?.[0]?.properties?.id as string | undefined;
-    const repair = data.repairs.find((item) => item.id === id);
-    if (repair) {
-      showPopup(map, event.lngLat, repairPopup(repair));
-    }
-  });
-}
-
-// After setStyle() the map drops every source and layer, so overlays must be
-// replayed on top of the new basemap. DOM markers survive the swap.
-export function onStyleLoad(map: maplibregl.Map, replay: () => void): void {
-  map.on("style.load", replay);
-}
-
-export function setLayerVisibility(
-  map: maplibregl.Map,
-  layerId: string,
-  visible: boolean,
-): void {
-  if (map.getLayer(layerId)) {
-    map.setLayoutProperty(layerId, "visibility", visible ? "visible" : "none");
-  }
 }
 
 export function setMarkersVisibility(
