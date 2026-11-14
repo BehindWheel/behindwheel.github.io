@@ -17,6 +17,13 @@ function speedLabel(car: number, truck: number): string {
   return truck > 0 ? `${car} / ${truck} км/ч` : `${car} км/ч`;
 }
 
+// The CDN dates are ISO YYYY-MM-DD; the panel reads them as DD.MM.YYYY.
+// Anything without that shape passes through untouched.
+function formatDate(iso: string): string {
+  const [year, month, day] = iso.split("-");
+  return year && month && day ? `${day}.${month}.${year}` : iso;
+}
+
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="detail-row">
@@ -38,7 +45,7 @@ function detailRows(detail: Detail) {
         />
         <Row label="Угол" value={`${camera.angle}°`} />
         <Row label="Регион" value={camera.region} />
-        <Row label="Обновлено" value={camera.updateTime} />
+        <Row label="Обновлено" value={formatDate(camera.updateTime)} />
       </>
     );
   }
@@ -57,7 +64,7 @@ function detailRows(detail: Detail) {
         <Row label="Угол начала" value={`${camera.angleStart}°`} />
         <Row label="Угол конца" value={`${camera.angleEnd}°`} />
         <Row label="Регион" value={camera.region} />
-        <Row label="Обновлено" value={camera.updateTime} />
+        <Row label="Обновлено" value={formatDate(camera.updateTime)} />
       </>
     );
   }
@@ -68,14 +75,17 @@ function detailRows(detail: Detail) {
         label="Тип"
         value={repair.type === "point" ? "Точечный" : "Участок дороги"}
       />
-      <Row label="Даты" value={`${repair.dateBegin} — ${repair.dateEnd}`} />
+      <Row
+        label="Даты"
+        value={`${formatDate(repair.dateBegin)} — ${formatDate(repair.dateEnd)}`}
+      />
       {repair.speed > 0 && (
         <Row label="Ограничение" value={`${repair.speed} км/ч`} />
       )}
       {repair.note && <Row label="Заметка" value={repair.note} />}
       <Row label="Проверено" value={repair.verified ? "Да" : "Нет"} />
       <Row label="Регион" value={repair.region} />
-      <Row label="Обновлено" value={repair.updateTime} />
+      <Row label="Обновлено" value={formatDate(repair.updateTime)} />
     </>
   );
 }
