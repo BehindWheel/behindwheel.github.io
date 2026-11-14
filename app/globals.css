@@ -612,11 +612,5 @@ div.map-container {
   text-align: right;
 }
 
-.detail-muted {
-  margin-top: 10px;
-  color: var(--muted);
-  font-size: 12px;
-}
-
 /* The map-marker skins live in lib/map/map.css — beside the marker builders,
    the same convention as the dashboard's ui/map/map.css. */

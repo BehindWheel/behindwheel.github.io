@@ -112,7 +112,6 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
 
   const title =
     detail.kind === "repairs" ? detail.repair.road : detail.camera.name;
-  const id = detail.kind === "repairs" ? detail.repair.id : detail.camera.id;
 
   useEffect(() => {
     // The dialog pattern (aria-patterns.md): focus moves into the panel on
@@ -199,7 +198,6 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
           <p className="detail-note">{detail.repair.note}</p>
         )}
         <div className="detail-rows">{detailRows(detail)}</div>
-        <div className="detail-muted">id: {id}</div>
       </div>
     </>
   );
