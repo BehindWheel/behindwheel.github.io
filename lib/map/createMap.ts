@@ -1,5 +1,11 @@
 import * as maplibregl from "maplibre-gl";
-import { BELARUS_BOUNDS, LIBERTY_STYLE } from "./style";
+import { BELARUS_BOUNDS, DARK_MAP_STYLE, LIGHT_MAP_STYLE } from "./style";
+
+// The basemap follows the color scheme: Liberty in light, Dark in dark.
+// setStyle() wipes sources and layers wholesale — the style.load replay
+// redraws the overlays on top of whichever style wins, and the DOM sign
+// markers survive the swap on their own.
+const darkScheme = window.matchMedia("(prefers-color-scheme: dark)");
 
 // v6 ships ESM-only and spawns its worker from a URL. Turbopack resolves that
 // URL to a virtual /_next/static/media/maplibre-gl-worker.mjs?v=… that never
@@ -17,7 +23,7 @@ maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
 export function createMap(container: HTMLElement): maplibregl.Map {
   const map = new maplibregl.Map({
     container,
-    style: LIBERTY_STYLE,
+    style: darkScheme.matches ? DARK_MAP_STYLE : LIGHT_MAP_STYLE,
     bounds: BELARUS_BOUNDS,
     attributionControl: false,
   });
@@ -28,6 +34,9 @@ export function createMap(container: HTMLElement): maplibregl.Map {
     new maplibregl.GeolocateControl({ positionOptions: { enableHighAccuracy: true } }),
     "bottom-right",
   );
+  darkScheme.addEventListener("change", (event) => {
+    map.setStyle(event.matches ? DARK_MAP_STYLE : LIGHT_MAP_STYLE);
+  });
   return map;
 }
 

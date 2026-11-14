@@ -7,7 +7,16 @@ import type { Feature, FeatureCollection, LineString } from "geojson";
 import * as maplibregl from "maplibre-gl";
 import type { CdnData, CdnPoint, MediumSpeedCamera, RoadRepair } from "../cdn";
 import type { SelectFeature } from "./markers";
-import { MEDIUM_SPEED_LINE_COLOR, REPAIRS_LINE_COLOR } from "./style";
+import {
+  MEDIUM_SPEED_LINE_COLOR,
+  REPAIRS_LINE_COLOR,
+  REPAIRS_LINE_DARK_COLOR,
+} from "./style";
+
+// The basemap follows the color scheme; on the dark one the repairs red
+// reads its lighter step. The layers are re-added on every style.load, so
+// the choice is picked fresh each time the basemap swaps.
+const darkScheme = window.matchMedia("(prefers-color-scheme: dark)");
 
 export const LAYER_IDS = {
   mediumSpeed: "medium-speed-line",
@@ -89,7 +98,9 @@ export function applyOverlays(map: maplibregl.Map, data: CdnData): void {
       type: "line",
       source: "repairs",
       paint: {
-        "line-color": REPAIRS_LINE_COLOR,
+        "line-color": darkScheme.matches
+          ? REPAIRS_LINE_DARK_COLOR
+          : REPAIRS_LINE_COLOR,
         "line-width": 4,
         "line-opacity": 1,
       },
