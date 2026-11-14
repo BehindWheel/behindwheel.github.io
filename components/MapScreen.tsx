@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import AppBanner from "@/components/AppBanner";
+import { dismissBanner, isBannerDismissed, subscribeBannerDismissal } from "@/lib/appBanner";
 import DetailPanel, { type Detail } from "@/components/DetailPanel";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -81,6 +83,18 @@ export default function MapScreen() {
   // The data in state drives the detail panel; the ref twin drives the
   // style-swap replay, which runs outside render.
   const [data, setData] = useState<CdnData | null>(null);
+  // The install banner: dismissed-ness lives in localStorage — external state
+  // read through useSyncExternalStore. The server snapshot says dismissed, so
+  // the prerendered HTML ships without the banner and it appears on hydration.
+  const bannerDismissed = useSyncExternalStore(
+    subscribeBannerDismissal,
+    () => isBannerDismissed(window.localStorage),
+    () => true,
+  );
+
+  const closeBanner = useCallback(() => {
+    dismissBanner(window.localStorage);
+  }, []);
 
   const selectFeature = useCallback((kind: SelectionKind, id: string) => {
     setSelected({ kind, id });
@@ -195,77 +209,82 @@ export default function MapScreen() {
 
   return (
     <div className="screen">
-      <div ref={containerRef} className="map-container" inert={detail ? true : undefined} />
-      <button
-        type="button"
-        className="filter-button"
-        aria-expanded={filtersOpen}
-        aria-controls="layer-panel"
-        aria-label={filtersOpen ? "Скрыть фильтры" : "Показать фильтры"}
-        onClick={() => setFiltersOpen((open) => !open)}
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path
-            d="M3 5h18l-7 8v5l-4 2v-7L3 5z"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
-      {filtersOpen && (
-        <div className="panel" id="layer-panel" inert={detail ? true : undefined}>
-          <div className="panel-title">Grodno Roads</div>
-          <div role="group" aria-label="Слои карты">
-            <label className="panel-row">
-              <input
-                type="checkbox"
-                checked={toggles.stationary}
-                onChange={(event) =>
-                  setToggles((prev) => ({ ...prev, stationary: event.target.checked }))
-                }
-              />
-              Стационарные камеры
-            </label>
-            <label className="panel-row">
-              <input
-                type="checkbox"
-                checked={toggles.mediumSpeed}
-                onChange={(event) =>
-                  setToggles((prev) => ({ ...prev, mediumSpeed: event.target.checked }))
-                }
-              />
-              Средняя скорость
-            </label>
-            <label className="panel-row">
-              <input
-                type="checkbox"
-                checked={toggles.repairs}
-                onChange={(event) =>
-                  setToggles((prev) => ({ ...prev, repairs: event.target.checked }))
-                }
-              />
-              Ремонты дорог
-            </label>
+      {/* The banner takes layout space above the map: nothing is covered, and
+         MapLibre's default trackResize re-fits the canvas when it leaves. */}
+      {!bannerDismissed && <AppBanner onClose={closeBanner} />}
+      <div className="map-area">
+        <div ref={containerRef} className="map-container" inert={detail ? true : undefined} />
+        <button
+          type="button"
+          className="filter-button"
+          aria-expanded={filtersOpen}
+          aria-controls="layer-panel"
+          aria-label={filtersOpen ? "Скрыть фильтры" : "Показать фильтры"}
+          onClick={() => setFiltersOpen((open) => !open)}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M3 5h18l-7 8v5l-4 2v-7L3 5z"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+        {filtersOpen && (
+          <div className="panel" id="layer-panel" inert={detail ? true : undefined}>
+            <div className="panel-title">Grodno Roads</div>
+            <div role="group" aria-label="Слои карты">
+              <label className="panel-row">
+                <input
+                  type="checkbox"
+                  checked={toggles.stationary}
+                  onChange={(event) =>
+                    setToggles((prev) => ({ ...prev, stationary: event.target.checked }))
+                  }
+                />
+                Стационарные камеры
+              </label>
+              <label className="panel-row">
+                <input
+                  type="checkbox"
+                  checked={toggles.mediumSpeed}
+                  onChange={(event) =>
+                    setToggles((prev) => ({ ...prev, mediumSpeed: event.target.checked }))
+                  }
+                />
+                Средняя скорость
+              </label>
+              <label className="panel-row">
+                <input
+                  type="checkbox"
+                  checked={toggles.repairs}
+                  onChange={(event) =>
+                    setToggles((prev) => ({ ...prev, repairs: event.target.checked }))
+                  }
+                />
+                Ремонты дорог
+              </label>
+            </div>
+            <div className="panel-footer" aria-live="polite">
+              {status === "loading" && <span>Загрузка данных…</span>}
+              {status === "error" && (
+                <span className="panel-error">
+                  Не удалось загрузить данные: {errorMessage}{" "}
+                  <button type="button" onClick={retry}>
+                    Повторить
+                  </button>
+                </span>
+              )}
+              {status === "ready" && generatedAt && (
+                <span>Данные от {formatGeneratedAt(generatedAt)}</span>
+              )}
+            </div>
           </div>
-          <div className="panel-footer" aria-live="polite">
-            {status === "loading" && <span>Загрузка данных…</span>}
-            {status === "error" && (
-              <span className="panel-error">
-                Не удалось загрузить данные: {errorMessage}{" "}
-                <button type="button" onClick={retry}>
-                  Повторить
-                </button>
-              </span>
-            )}
-            {status === "ready" && generatedAt && (
-              <span>Данные от {formatGeneratedAt(generatedAt)}</span>
-            )}
-          </div>
-        </div>
-      )}
+        )}
+      </div>
       {detail && <DetailPanel detail={detail} onClose={closeDetail} />}
     </div>
   );
