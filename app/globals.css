@@ -465,6 +465,11 @@ div.map-container {
     border-radius: 0;
     animation: detail-slide-right 250ms cubic-bezier(0, 0, 0.2, 1);
   }
+  /* The handle is a bottom-sheet affordance; the desktop panel slides from
+     the side, so the swipe-down gesture it hints at does not exist here. */
+  .drag-handle {
+    display: none;
+  }
 }
 
 @keyframes detail-slide-up {
@@ -494,10 +499,58 @@ div.map-container {
   }
 }
 
+/* The exit replays the entry in reverse: the drawer returns where it came
+   from while the backdrop fades with it; DetailPanel unmounts on
+   animationend (a timer in the component covers a skipped event). */
+@keyframes detail-slide-down {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes detail-slide-out-right {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes detail-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.detail-backdrop.detail-closing {
+  animation: detail-fade-out 150ms ease-out forwards;
+}
+
+.detail-panel.detail-closing {
+  animation: detail-slide-down 250ms cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@media (min-width: 768px) {
+  .detail-panel.detail-closing {
+    animation-name: detail-slide-out-right;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .detail-backdrop,
   .detail-panel {
     animation: detail-fade 150ms ease-out;
+  }
+  .detail-backdrop.detail-closing,
+  .detail-panel.detail-closing {
+    animation: detail-fade-out 150ms ease-out forwards;
   }
 }
 
