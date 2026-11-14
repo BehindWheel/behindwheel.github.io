@@ -223,10 +223,10 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
             ✕
           </button>
         </div>
+        <div className="detail-rows">{detailRows(detail)}</div>
         {detail.kind === "repairs" && detail.repair.note && (
           <p className="detail-note">{detail.repair.note}</p>
         )}
-        <div className="detail-rows">{detailRows(detail)}</div>
       </div>
     </>
   );
