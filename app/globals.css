@@ -150,22 +150,6 @@ div.map-container {
   transform-origin: bottom center;
 }
 
-.marker-speed-badge {
-  position: absolute;
-  bottom: -7px;
-  left: calc(50% - 14px);
-  width: 28px;
-  padding: 0 3px;
-  font-size: 9px;
-  font-weight: 700;
-  line-height: 13px;
-  text-align: center;
-  color: #ffffff;
-  background: var(--accent);
-  border-radius: 7px;
-  white-space: nowrap;
-}
-
 .marker-verified-badge {
   position: absolute;
   top: -3px;

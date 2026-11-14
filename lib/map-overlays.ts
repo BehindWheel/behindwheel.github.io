@@ -153,14 +153,13 @@ type SignMarkerOptions = {
   // camera angle — the read-only echo of the dashboard's rays. CSS rotation
   // never follows map bearing; the public map is north-locked, so it shows.
   rayAngle?: number;
-  label?: string;
   verified?: boolean;
 };
 
 // The dashboard marker convention (ui/map/markers.js): a sign is an <img>
 // inside .marker-body, sized 18x20, the marker root keeps the maplibregl
 // absolute positioning and anchors bottom, so the sign's tip sits on the point.
-function createSignMarker({ icon, rayAngle, label, verified }: SignMarkerOptions): maplibregl.Marker {
+function createSignMarker({ icon, rayAngle, verified }: SignMarkerOptions): maplibregl.Marker {
   const element = document.createElement("div");
   element.className = "sign-marker";
   if (rayAngle !== undefined) {
@@ -181,12 +180,6 @@ function createSignMarker({ icon, rayAngle, label, verified }: SignMarkerOptions
     body.appendChild(badge);
   }
   element.appendChild(body);
-  if (label) {
-    const speed = document.createElement("span");
-    speed.className = "marker-speed-badge";
-    speed.textContent = label;
-    element.appendChild(speed);
-  }
   return new maplibregl.Marker({ element, anchor: "bottom" });
 }
 
@@ -229,7 +222,6 @@ export function createMarkerGroups(data: CdnData): MarkerGroups {
         createSignMarker({
           icon: ICONS.camera,
           rayAngle: camera.angle,
-          label: `${camera.speedCar}`,
         }).setLngLat([camera.point.lng, camera.point.lat]),
     ),
     mediumSpeed: buildGroup(
