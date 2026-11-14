@@ -8,6 +8,15 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-## Pull requests
+## Branches & PRs
 
-A PR title and description are always in English, no matter what language the chat or the UI strings use — the repo is public and the history is the documentation.
+- Work always happens on a fresh branch cut from the latest `main` — fetch first (`git fetch origin main && git checkout -b <name> origin/main`); never commit to `main` directly.
+- A PR merges only after approval, via rebase — no merge commits, the history stays linear.
+- A PR title and description are always in English, no matter what language the chat or the UI strings use — the repo is public and the history is the documentation.
+
+## Merges
+
+- CI must be green on the PR head before merging.
+- Force-push is allowed in this repo — it's the tool for rebasing an open PR onto a moved `main`. Always with `--force-with-lease`, never bare `--force`; a rebase that resolves conflicts is preferable to merging `main` into the branch.
+- The agent may rebase-merge small, green PRs on its own, but asks specifically about each one — and re-checks the live PR state (`gh pr list`/`gh pr view`) immediately before asking, not from memory.
+- Every push to `main` triggers a Pages deploy; the deploy workflow has `concurrency: cancel-in-progress`, so merging several PRs in a row is safe — the last build wins.
