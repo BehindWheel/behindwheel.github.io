@@ -1,11 +1,17 @@
 /* The map-overlay skins: the DOM sign markers and their popups, kept beside
-   the marker builders (markers.ts) so a skin and its class ship together.
-   The marker root must keep the absolute positioning maplibregl.css gives it. */
+   the marker builders (markers.ts) so a skin and its class ship together. */
+
+/* The marker root must stay absolute for maplibregl.css (.maplibregl-marker
+   adds position: absolute); a skin class in this file loaded after it wins the
+   equal-specificity cascade and the markers stack in flow, one per line — the
+   same trap the dashboard's map.css guards with this re-stated rule. */
+.maplibregl-marker {
+  position: absolute;
+}
 
 /* Sign markers — the dashboard marker convention: an <img> sign inside
    .marker-body, 18x20, the maplibregl root anchored bottom. */
 .sign-marker {
-  position: relative;
   cursor: pointer;
 }
 
