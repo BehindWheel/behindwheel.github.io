@@ -122,6 +122,19 @@ export function bindLayerSelection(
       onSelect("repairs", id);
     }
   });
+
+  // The sign markers are DOM and take their pointer cursor from CSS; the
+  // lines live on the canvas, so the hover cursor goes through layer events
+  // — same click targets as above.
+  const canvas = map.getCanvas();
+  for (const layerId of [LAYER_IDS.mediumSpeed, LAYER_IDS.repairsLines]) {
+    map.on("mouseenter", layerId, () => {
+      canvas.style.cursor = "pointer";
+    });
+    map.on("mouseleave", layerId, () => {
+      canvas.style.cursor = "";
+    });
+  }
 }
 
 export function setLayerVisibility(
