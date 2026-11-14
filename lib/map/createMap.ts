@@ -1,5 +1,14 @@
-import maplibregl from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
 import { BELARUS_BOUNDS, LIBERTY_STYLE } from "./style";
+
+// v6 ships ESM-only and spawns its worker from a URL. Turbopack resolves that
+// URL to a virtual /_next/static/media/maplibre-gl-worker.mjs?v=… that never
+// exists on disk (the real file is content-hashed), so the worker 404s and
+// the map hangs silently before its first render — no tiles, no markers, no
+// error events. The prebuild script copies the worker into public/ and we
+// point maplibre at it explicitly; the copy happens per build, so worker and
+// main module can never drift apart.
+maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
 
 // The single MapLibre bootstrap — the same role as the dashboard's
 // ui/map/createMap.js: vector style, bounds, the bottom-right controls. The
