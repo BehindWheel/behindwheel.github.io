@@ -84,6 +84,10 @@ export function applyOverlays(map: maplibregl.Map, data: CdnData): void {
       id: LAYER_IDS.mediumSpeed,
       type: "line",
       source: "medium-speed",
+      layout: {
+        "line-cap": "round",
+        "line-join": "round",
+      },
       paint: {
         "line-color": MEDIUM_SPEED_LINE_COLOR,
         "line-width": 4,
@@ -97,6 +101,10 @@ export function applyOverlays(map: maplibregl.Map, data: CdnData): void {
       id: LAYER_IDS.repairsLines,
       type: "line",
       source: "repairs",
+      layout: {
+        "line-cap": "round",
+        "line-join": "round",
+      },
       paint: {
         "line-color": darkScheme.matches
           ? REPAIRS_LINE_DARK_COLOR
