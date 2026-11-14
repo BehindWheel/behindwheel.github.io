@@ -152,6 +152,32 @@ export default function MapScreen() {
     }
   }, [toggles, status]);
 
+  // The filters popover closes on outside interaction and Escape (the popover
+  // pattern); pointerdown so the map under it still gets the full click.
+  useEffect(() => {
+    if (!filtersOpen) {
+      return;
+    }
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest(".panel") || target?.closest(".filter-button")) {
+        return;
+      }
+      setFiltersOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setFiltersOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [filtersOpen]);
+
   const retry = useCallback(() => {
     const map = mapRef.current;
     if (!map) {
