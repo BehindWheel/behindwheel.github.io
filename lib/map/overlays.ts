@@ -7,7 +7,7 @@ import type { Feature, FeatureCollection, LineString } from "geojson";
 import maplibregl from "maplibre-gl";
 import type { CdnData, CdnPoint, MediumSpeedCamera, RoadRepair } from "../cdn";
 import { mediumSpeedPopup, repairPopup, showPopup } from "./markers";
-import { ACCENT_COLOR, REPAIRS_LINE_COLOR } from "./style";
+import { MEDIUM_SPEED_LINE_COLOR, REPAIRS_LINE_COLOR } from "./style";
 
 export const LAYER_IDS = {
   mediumSpeed: "medium-speed-line",
@@ -74,7 +74,7 @@ export function applyOverlays(map: maplibregl.Map, data: CdnData): void {
       type: "line",
       source: "medium-speed",
       paint: {
-        "line-color": ACCENT_COLOR,
+        "line-color": MEDIUM_SPEED_LINE_COLOR,
         "line-width": 4,
         "line-opacity": 0.85,
       },
