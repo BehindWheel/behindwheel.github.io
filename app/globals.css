@@ -328,6 +328,12 @@ div.map-container {
   left: 54px;
 }
 
+/* the toggle glyphs read at the map controls' 18px, not the button's 1em */
+.filter-button .svg-icon {
+  width: 18px;
+  height: 18px;
+}
+
 .filter-button svg {
   width: 18px;
   height: 18px;
