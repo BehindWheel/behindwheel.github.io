@@ -11,6 +11,8 @@ type AppBannerProps = {
 export default function AppBanner({ onClose }: AppBannerProps) {
   return (
     <div className="app-banner" role="region" aria-label="Мобильное приложение Grodno Roads">
+      {/* a 32px static SVG — next/image's optimizer is overkill for it */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/icons/logo.svg" alt="" width={32} height={32} />
       <div className="app-banner-text">
         <span className="app-banner-title">За рулем | Гродно и область</span>
