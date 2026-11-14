@@ -93,10 +93,6 @@ function detailRows(detail: Detail) {
   return (
     <>
       <Row
-        label="Тип"
-        value={repair.type === "point" ? "Точечный" : "Участок дороги"}
-      />
-      <Row
         label="Даты"
         value={`${formatDate(repair.dateBegin)} — ${formatDate(repair.dateEnd)}`}
       />
