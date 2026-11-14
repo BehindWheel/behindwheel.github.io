@@ -105,16 +105,27 @@ type LayerPopupState = { data: CdnData; bound: boolean };
 const layerPopupState = new WeakMap<maplibregl.Map, LayerPopupState>();
 
 export function bindLayerPopups(map: maplibregl.Map, data: CdnData): void {
+  const state = layerPopupState.get(map) ?? { data, bound: false };
+  state.data = data;
+  layerPopupState.set(map, state);
+  if (state.bound) {
+    return;
+  }
+  state.bound = true;
   map.on("click", LAYER_IDS.mediumSpeed, (event) => {
     const id = event.features?.[0]?.properties?.id as string | undefined;
-    const camera = data.mediumSpeed.find((item) => item.id === id);
+    const camera = layerPopupState.get(map)?.data.mediumSpeed.find(
+      (item) => item.id === id,
+    );
     if (camera) {
       showPopup(map, event.lngLat, mediumSpeedPopup(camera));
     }
   });
   map.on("click", LAYER_IDS.repairsLines, (event) => {
     const id = event.features?.[0]?.properties?.id as string | undefined;
-    const repair = data.repairs.find((item) => item.id === id);
+    const repair = layerPopupState.get(map)?.data.repairs.find(
+      (item) => item.id === id,
+    );
     if (repair) {
       showPopup(map, event.lngLat, repairPopup(repair));
     }
