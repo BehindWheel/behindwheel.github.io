@@ -3,11 +3,9 @@
   --panel-border: #d4d4d8;
   --foreground: #18181b;
   /* Text tokens are measured against the panel background (WCAG 1.4.3):
-     muted 7.60:1, accent-text 5.08:1, danger 4.75:1 on #fdfdfd. */
+     muted 7.60:1, accent-text 5.08:1 on #fdfdfd. */
   --muted: #52525b;
-  --accent: #2563eb;
   --accent-text: #2563eb;
-  --danger: #dc2626;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -19,7 +17,6 @@
        (7.74:1); the checkbox accent stays #2563eb, a UI component needs 3:1. */
     --muted: #c4c9d4;
     --accent-text: #7cb3f8;
-    --danger: #f87171;
   }
 }
 
