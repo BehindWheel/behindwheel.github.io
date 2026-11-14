@@ -15,6 +15,11 @@
   cursor: pointer;
 }
 
+.sign-marker:focus-visible {
+  outline: 2px solid var(--accent-text, #2563eb);
+  outline-offset: 2px;
+}
+
 .marker-body {
   position: relative;
   display: block;
