@@ -31,7 +31,9 @@ export const SATELLITE_STYLE: StyleSpecification = {
   ],
 };
 
-// The dashboard design tokens (uikit/colors.js): medium-speed sections paint
-// with the accent, curated repair stretches with the brown repairs-line.
-export const ACCENT_COLOR = "#0f6cbd";
+// The dashboard colors: medium-speed section lines take the red default of
+// the dashboard's line group (ui/map/overlays.js: shape.color ?? "#e53935" —
+// amber there is only the hover highlight), curated repair stretches keep the
+// brown repairs-line.
+export const MEDIUM_SPEED_LINE_COLOR = "#e53935";
 export const REPAIRS_LINE_COLOR = "#7b4a21";
