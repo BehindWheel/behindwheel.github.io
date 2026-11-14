@@ -1,5 +1,5 @@
-/* The map-overlay skins: the DOM sign markers and their popups, kept beside
-   the marker builders (markers.ts) so a skin and its class ship together. */
+/* The map-overlay skins: the DOM sign markers, kept beside the marker
+   builders (markers.ts) so a skin and its class ship together. */
 
 /* The marker root must stay absolute for maplibregl.css (.maplibregl-marker
    adds position: absolute); a skin class in this file loaded after it wins the
@@ -29,19 +29,4 @@
   width: 18px;
   height: 20px;
   display: block;
-}
-
-.site-popup {
-  font-family: inherit;
-  font-size: 13px;
-  line-height: 1.45;
-}
-
-.site-popup strong {
-  display: block;
-  margin-bottom: 2px;
-}
-
-.site-popup-muted {
-  color: #71717a;
 }
