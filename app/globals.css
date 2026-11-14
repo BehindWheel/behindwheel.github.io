@@ -65,12 +65,26 @@ body {
   color: var(--muted);
 }
 
+/* Off-screen text for screen readers only (the map chunk placeholder). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* div.map-container: MapLibre stamps its own .maplibregl-map (position:
    relative) onto the same div, so a bare class tie is lost to source order
-   and the container collapses to 0 height — an all-black map. */
+   and the container collapses to 0 height — an all-black map. The background
+   covers the WebGL canvas's black first frames before the style paints. */
 div.map-container {
   position: absolute;
   inset: 0;
+  background: #eee9e2;
 }
 
 .map-container .maplibregl-ctrl-attrib {
