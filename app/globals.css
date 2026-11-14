@@ -434,7 +434,7 @@ div.map-container {
   position: fixed;
   inset: 0;
   z-index: 40;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.3);
   animation: detail-fade 150ms ease-out;
 }
 
