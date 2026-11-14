@@ -595,9 +595,15 @@ div.map-container {
   cursor: pointer;
 }
 
+/* The repair note is prose, not a fact — a GitHub-style blockquote: the
+   accent bar on the left, the text wraps freely. */
 .detail-note {
   margin-bottom: 8px;
+  padding: 2px 0 2px 10px;
+  border-left: 3px solid var(--accent-text);
+  color: var(--muted);
   font-size: 14px;
+  white-space: pre-line;
 }
 
 .detail-row {
