@@ -75,11 +75,17 @@ export function showPopup(map: maplibregl.Map, lngLat: maplibregl.LngLat, html: 
 
 type SignMarkerOptions = {
   icon: string;
+  // The accessible name: the marker element is a focusable button (WCAG
+  // 2.1.1 — a click-only div is unreachable from the keyboard).
+  label: string;
 };
 
-function createSignMarker({ icon }: SignMarkerOptions): maplibregl.Marker {
+function createSignMarker({ icon, label }: SignMarkerOptions): maplibregl.Marker {
   const element = document.createElement("div");
   element.className = "sign-marker";
+  element.tabIndex = 0;
+  element.setAttribute("role", "button");
+  element.setAttribute("aria-label", label);
   const body = document.createElement("span");
   body.className = "marker-body";
   const img = document.createElement("img");
@@ -90,18 +96,24 @@ function createSignMarker({ icon }: SignMarkerOptions): maplibregl.Marker {
   return new maplibregl.Marker({ element, anchor: "bottom" });
 }
 
-function bindGroupClicks<T extends { id: string }>(
+function bindGroupActivations<T extends { id: string }>(
   map: maplibregl.Map,
   group: MarkerGroup<T>,
   popup: (item: T) => string,
 ): void {
   for (const marker of group.markers) {
     const element = marker.getElement();
-    element.addEventListener("click", (event) => {
+    const open = (event: Event) => {
       event.stopPropagation();
       const item = group.itemById.get(element.dataset.id ?? "");
       if (item) {
         showPopup(map, marker.getLngLat(), popup(item));
+      }
+    };
+    element.addEventListener("click", open);
+    element.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        open(event);
       }
     });
   }
@@ -138,20 +150,20 @@ export function createMarkerGroups(data: {
     stationary: buildGroup(
       data.stationary.filter((camera) => camera.point),
       (camera) => [
-        createSignMarker({ icon: ICONS.camera }).setLngLat([
-          camera.point.lng,
-          camera.point.lat,
-        ]),
+        createSignMarker({
+          icon: ICONS.camera,
+          label: `Стационарная камера: ${camera.name}`,
+        }).setLngLat([camera.point.lng, camera.point.lat]),
       ],
     ),
     mediumSpeed: buildGroup(
       data.mediumSpeed.filter((camera) => camera.points.length > 0),
       (camera) =>
         lineEnds(camera.points).map((at) =>
-          createSignMarker({ icon: ICONS.mediumSpeed }).setLngLat([
-            at.lng,
-            at.lat,
-          ]),
+          createSignMarker({
+            icon: ICONS.mediumSpeed,
+            label: `Участок средней скорости: ${camera.name}`,
+          }).setLngLat([at.lng, at.lat]),
         ),
     ),
     repairs: buildGroup(
@@ -163,17 +175,17 @@ export function createMarkerGroups(data: {
         // barrier sign (road-repairs-point.svg vs road-repairs.svg).
         if (repair.type === "point") {
           return [
-            createSignMarker({ icon: ICONS.repairsPoint }).setLngLat([
-              repair.point!.lng,
-              repair.point!.lat,
-            ]),
+            createSignMarker({
+              icon: ICONS.repairsPoint,
+              label: `Ремонт дороги: ${repair.road}`,
+            }).setLngLat([repair.point!.lng, repair.point!.lat]),
           ];
         }
         return lineEnds(repair.points!).map((at) =>
-          createSignMarker({ icon: ICONS.repairsLine }).setLngLat([
-            at.lng,
-            at.lat,
-          ]),
+          createSignMarker({
+            icon: ICONS.repairsLine,
+            label: `Ремонт дороги: ${repair.road}`,
+          }).setLngLat([at.lng, at.lat]),
         );
       },
     ),
@@ -189,9 +201,9 @@ export function addMarkerGroups(map: maplibregl.Map, groups: MarkerGroups): void
 }
 
 export function bindMarkerPopups(map: maplibregl.Map, groups: MarkerGroups): void {
-  bindGroupClicks(map, groups.stationary, stationaryPopup);
-  bindGroupClicks(map, groups.mediumSpeed, mediumSpeedPopup);
-  bindGroupClicks(map, groups.repairs, repairPopup);
+  bindGroupActivations(map, groups.stationary, stationaryPopup);
+  bindGroupActivations(map, groups.mediumSpeed, mediumSpeedPopup);
+  bindGroupActivations(map, groups.repairs, repairPopup);
 }
 
 export function setMarkersVisibility(
