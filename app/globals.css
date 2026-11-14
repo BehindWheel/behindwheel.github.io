@@ -565,7 +565,7 @@ div.map-container {
 .detail-header {
   display: flex;
   gap: 8px;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   margin-bottom: 8px;
 }
@@ -579,7 +579,10 @@ div.map-container {
   display: block;
   min-width: 44px;
   min-height: 44px;
-  margin: -8px -8px 0 0;
+  /* Symmetric negative margins keep the 44px touch target inside the panel
+     padding without shifting the glyph down — the margin box stays centered
+     on it, so the title centers against the glyph exactly. */
+  margin: -8px -8px -8px 0;
   border: none;
   background: none;
   color: var(--muted);
