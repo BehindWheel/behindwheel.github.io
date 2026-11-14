@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import AppBanner from "@/components/AppBanner";
 import { dismissBanner, isBannerDismissed, subscribeBannerDismissal } from "@/lib/appBanner";
 import DetailPanel, { type Detail } from "@/components/DetailPanel";
-import maplibregl from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { loadCdnData, type CdnData } from "@/lib/cdn";
 import { createMap, onStyleLoad } from "@/lib/map/createMap";

@@ -3,7 +3,7 @@
 // sized 18x20, the maplibregl root anchors bottom so the sign's tip sits on
 // the point; the skins live in the sibling map.css.
 
-import maplibregl from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
 import "./map.css";
 import type {
   CdnPoint,

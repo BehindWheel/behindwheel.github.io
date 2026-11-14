@@ -4,7 +4,7 @@
 // DOM sign markers (see markers.ts).
 
 import type { Feature, FeatureCollection, LineString } from "geojson";
-import maplibregl from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
 import type { CdnData, CdnPoint, MediumSpeedCamera, RoadRepair } from "../cdn";
 import type { SelectFeature } from "./markers";
 import { MEDIUM_SPEED_LINE_COLOR, REPAIRS_LINE_COLOR } from "./style";
