@@ -133,45 +133,47 @@ export default function MapScreen() {
       <div ref={containerRef} className="map-container" />
       <div className="panel">
         <div className="panel-title">Grodno Roads</div>
-        <label className="panel-row">
-          <input
-            type="checkbox"
-            checked={toggles.stationary}
-            onChange={(event) =>
-              setToggles((prev) => ({ ...prev, stationary: event.target.checked }))
-            }
-          />
-          Стационарные камеры
-        </label>
-        <label className="panel-row">
-          <input
-            type="checkbox"
-            checked={toggles.mediumSpeed}
-            onChange={(event) =>
-              setToggles((prev) => ({ ...prev, mediumSpeed: event.target.checked }))
-            }
-          />
-          Средняя скорость
-        </label>
-        <label className="panel-row">
-          <input
-            type="checkbox"
-            checked={toggles.repairs}
-            onChange={(event) =>
-              setToggles((prev) => ({ ...prev, repairs: event.target.checked }))
-            }
-          />
-          Ремонты дорог
-        </label>
-        <label className="panel-row">
-          <input
-            type="checkbox"
-            checked={satellite}
-            onChange={(event) => setSatellite(event.target.checked)}
-          />
-          Спутник
-        </label>
-        <div className="panel-footer">
+        <div role="group" aria-label="Слои карты">
+          <label className="panel-row">
+            <input
+              type="checkbox"
+              checked={toggles.stationary}
+              onChange={(event) =>
+                setToggles((prev) => ({ ...prev, stationary: event.target.checked }))
+              }
+            />
+            Стационарные камеры
+          </label>
+          <label className="panel-row">
+            <input
+              type="checkbox"
+              checked={toggles.mediumSpeed}
+              onChange={(event) =>
+                setToggles((prev) => ({ ...prev, mediumSpeed: event.target.checked }))
+              }
+            />
+            Средняя скорость
+          </label>
+          <label className="panel-row">
+            <input
+              type="checkbox"
+              checked={toggles.repairs}
+              onChange={(event) =>
+                setToggles((prev) => ({ ...prev, repairs: event.target.checked }))
+              }
+            />
+            Ремонты дорог
+          </label>
+          <label className="panel-row">
+            <input
+              type="checkbox"
+              checked={satellite}
+              onChange={(event) => setSatellite(event.target.checked)}
+            />
+            Спутник
+          </label>
+        </div>
+        <div className="panel-footer" aria-live="polite">
           {status === "loading" && <span>Загрузка данных…</span>}
           {status === "error" && (
             <span className="panel-error">

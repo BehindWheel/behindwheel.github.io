@@ -2,9 +2,12 @@
   --panel-bg: rgba(255, 255, 255, 0.92);
   --panel-border: #d4d4d8;
   --foreground: #18181b;
-  --muted: #71717a;
+  /* Text tokens are measured against the panel background (WCAG 1.4.3):
+     muted 7.60:1, accent-text 5.08:1, danger 4.75:1 on #fdfdfd. */
+  --muted: #52525b;
   --accent: #2563eb;
-  --danger: #ef4444;
+  --accent-text: #2563eb;
+  --danger: #dc2626;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -12,7 +15,11 @@
     --panel-bg: rgba(24, 24, 27, 0.92);
     --panel-border: #3f3f46;
     --foreground: #fafafa;
-    --muted: #a1a1aa;
+    /* #2563eb drops to 3.25:1 on the dark panel — text takes the lighter blue
+       (7.74:1); the checkbox accent stays #2563eb, a UI component needs 3:1. */
+    --muted: #c4c9d4;
+    --accent-text: #7cb3f8;
+    --danger: #f87171;
   }
 }
 
@@ -86,14 +93,21 @@ div.map-container {
   display: flex;
   gap: 8px;
   align-items: center;
-  padding: 3px 0;
+  min-height: 44px;
   font-size: 14px;
   cursor: pointer;
   user-select: none;
 }
 
 .panel-row input {
+  width: 18px;
+  height: 18px;
   accent-color: var(--accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-text);
+  outline-offset: 2px;
 }
 
 .panel-footer {
@@ -111,7 +125,7 @@ div.map-container {
 .panel-error button {
   border: none;
   background: none;
-  color: var(--accent);
+  color: var(--accent-text);
   font: inherit;
   text-decoration: underline;
   cursor: pointer;
