@@ -59,6 +59,22 @@ export type RoadRepair = {
   points?: CdnPoint[];
 };
 
+// The CDN regions are latin slugs; the UI reads them as the Belarusian
+// oblast names in the nominative — the panel row is labeled «Область».
+// A slug outside the map passes through unchanged.
+const REGION_NAMES: Record<string, string> = {
+  brest: "Брестская",
+  gomel: "Гомельская",
+  grodno: "Гродненская",
+  minsk: "Минская",
+  mogilev: "Могилёвская",
+  vitebsk: "Витебская",
+};
+
+export function regionName(slug: string): string {
+  return REGION_NAMES[slug] ?? slug;
+}
+
 export type CdnData = {
   generatedAt: string;
   stationary: StationaryCamera[];

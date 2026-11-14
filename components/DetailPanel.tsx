@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type TouchEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+  type TouchEvent,
+} from "react";
+import { regionName } from "@/lib/cdn";
 import type { MediumSpeedCamera, RoadRepair, StationaryCamera } from "@/lib/cdn";
 
 export type Detail =
@@ -13,8 +21,25 @@ type DetailPanelProps = {
   onClose: () => void;
 };
 
-function speedLabel(car: number, truck: number): string {
-  return truck > 0 ? `${car} / ${truck} км/ч` : `${car} км/ч`;
+// The dashboard's speed meta (screens/speed: the CAR_ICON/TRUCK_ICON pair
+// over the same mask-drawn svg-icons): each limit reads icon + number, and
+// the truck figure only appears when the CDN carries one.
+function SpeedValue({ car, truck }: { car: number; truck: number }) {
+  return (
+    <span className="speed-value">
+      <span className="speed-limit">
+        <span className="svg-icon icon-car" aria-hidden="true" />
+        {car}
+      </span>
+      {truck > 0 && (
+        <span className="speed-limit">
+          <span className="svg-icon icon-truck" aria-hidden="true" />
+          {truck}
+        </span>
+      )}
+      км/ч
+    </span>
+  );
 }
 
 // The CDN dates are ISO YYYY-MM-DD; the panel reads them as DD.MM.YYYY.
@@ -24,7 +49,7 @@ function formatDate(iso: string): string {
   return year && month && day ? `${day}.${month}.${year}` : iso;
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="detail-row">
       <span className="detail-label">{label}</span>
@@ -38,12 +63,12 @@ function detailRows(detail: Detail) {
     const camera = detail.camera;
     return (
       <>
-        <Row label="Скорость" value={speedLabel(camera.speedCar, camera.speedTruck)} />
+        <Row label="Скорость" value={<SpeedValue car={camera.speedCar} truck={camera.speedTruck} />} />
         <Row
           label="Направление"
           value={camera.bidirectional ? "Оба направления" : "Одно направление"}
         />
-        <Row label="Регион" value={camera.region} />
+        <Row label="Область" value={regionName(camera.region)} />
         <Row label="Обновлено" value={formatDate(camera.updateTime)} />
       </>
     );
@@ -52,7 +77,7 @@ function detailRows(detail: Detail) {
     const camera = detail.camera;
     return (
       <>
-        <Row label="Скорость" value={speedLabel(camera.speedCar, camera.speedTruck)} />
+        <Row label="Скорость" value={<SpeedValue car={camera.speedCar} truck={camera.speedTruck} />} />
         <Row
           label="Направление"
           value={
@@ -60,7 +85,7 @@ function detailRows(detail: Detail) {
             `, ${camera.points.length} точек`
           }
         />
-        <Row label="Регион" value={camera.region} />
+        <Row label="Область" value={regionName(camera.region)} />
         <Row label="Обновлено" value={formatDate(camera.updateTime)} />
       </>
     );
@@ -81,7 +106,7 @@ function detailRows(detail: Detail) {
       )}
       {repair.note && <Row label="Заметка" value={repair.note} />}
       <Row label="Проверено" value={repair.verified ? "Да" : "Нет"} />
-      <Row label="Регион" value={repair.region} />
+      <Row label="Область" value={regionName(repair.region)} />
       <Row label="Обновлено" value={formatDate(repair.updateTime)} />
     </>
   );

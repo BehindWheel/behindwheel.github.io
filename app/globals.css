@@ -617,5 +617,44 @@ div.map-container {
   text-align: right;
 }
 
+/* The speed row reads like the dashboard's queue meta — icon + number per
+   limit type, the truck figure only when the CDN carries one. The icons run
+   through the mask trick (the file draws in currentColor, so the value
+   recolors with the scheme; an <img> would freeze its baked color). */
+.svg-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  background: currentcolor;
+  mask: var(--icon) no-repeat center / contain;
+}
+
+.icon-car {
+  --icon: url("/icons/car.svg");
+}
+
+.icon-truck {
+  --icon: url("/icons/truck.svg");
+}
+
+.speed-value {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.speed-value .speed-limit {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+
+/* a wider gap between the two limit types than the icon-to-its-number one,
+   the same rhythm as the dashboard's queue-item-meta */
+.speed-value .speed-limit + .speed-limit {
+  margin-left: 8px;
+}
+
 /* The map-marker skins live in lib/map/map.css — beside the marker builders,
    the same convention as the dashboard's ui/map/map.css. */
