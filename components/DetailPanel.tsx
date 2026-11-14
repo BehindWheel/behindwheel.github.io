@@ -66,7 +66,7 @@ function detailRows(detail: Detail) {
         <Row label="Скорость" value={<SpeedValue car={camera.speedCar} truck={camera.speedTruck} />} />
         <Row
           label="Направление"
-          value={camera.bidirectional ? "Оба направления" : "Одно направление"}
+          value={camera.bidirectional ? "Двухсторонняя" : "Односторонняя"}
         />
         <Row label="Область" value={regionName(camera.region)} />
         <Row label="Обновлено" value={formatDate(camera.updateTime)} />
@@ -81,7 +81,7 @@ function detailRows(detail: Detail) {
         <Row
           label="Направление"
           value={
-            (camera.bidirectional ? "Оба направления" : "Одно направление") +
+            (camera.bidirectional ? "Двухсторонняя" : "Односторонняя") +
             `, ${camera.points.length} точек`
           }
         />
