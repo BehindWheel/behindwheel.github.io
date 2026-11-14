@@ -55,6 +55,14 @@ const LAYER_TO_LAYERS: Record<keyof LayerToggles, string[]> = {
   repairs: [LAYER_IDS.repairsLines],
 };
 
+// The CDN timestamp is ISO UTC; the user reads it as a local date.
+function formatGeneratedAt(iso: string): string {
+  return new Intl.DateTimeFormat("ru-RU", {
+    day: "numeric",
+    month: "long",
+  }).format(new Date(iso));
+}
+
 export default function MapScreen() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -226,7 +234,9 @@ export default function MapScreen() {
                 </button>
               </span>
             )}
-            {status === "ready" && generatedAt && <span>Данные от {generatedAt}</span>}
+            {status === "ready" && generatedAt && (
+              <span>Данные от {formatGeneratedAt(generatedAt)}</span>
+            )}
           </div>
         </div>
       )}
