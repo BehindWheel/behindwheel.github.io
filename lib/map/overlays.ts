@@ -38,16 +38,18 @@ function mediumSpeedCollection(items: MediumSpeedCamera[]): FeatureCollection<Li
 function repairsLineCollection(items: RoadRepair[]): FeatureCollection<LineString> {
   return {
     type: "FeatureCollection",
-    features: items
-      .filter((repair) => repair.type === "line")
-      .map(
-        (repair): Feature<LineString> => ({
-          type: "Feature",
-          id: repair.id,
-          geometry: toLineGeometry(repair.points ?? []),
-          properties: { id: repair.id },
-        }),
-      ),
+    features: items.flatMap((repair) =>
+      repair.type === "line"
+        ? [
+            {
+              type: "Feature",
+              id: repair.id,
+              geometry: toLineGeometry(repair.points ?? []),
+              properties: { id: repair.id },
+            } satisfies Feature<LineString>,
+          ]
+        : [],
+    ),
   };
 }
 
@@ -94,6 +96,13 @@ export function applyOverlays(map: maplibregl.Map, data: CdnData): void {
     });
   }
 }
+
+type LayerPopupState = { data: CdnData; bound: boolean };
+
+// map.on() registers a listener and never dedupes, and bindLayerPopups runs
+// on every data load (the retry button re-runs loadData) — so the handlers
+// bind once per map and read the latest data through this WeakMap.
+const layerPopupState = new WeakMap<maplibregl.Map, LayerPopupState>();
 
 export function bindLayerPopups(map: maplibregl.Map, data: CdnData): void {
   map.on("click", LAYER_IDS.mediumSpeed, (event) => {
