@@ -1,0 +1,162 @@
+:root {
+  --panel-bg: rgba(255, 255, 255, 0.92);
+  --panel-border: #d4d4d8;
+  --foreground: #18181b;
+  --muted: #71717a;
+  --accent: #2563eb;
+  --danger: #ef4444;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --panel-bg: rgba(24, 24, 27, 0.92);
+    --panel-border: #3f3f46;
+    --foreground: #fafafa;
+    --muted: #a1a1aa;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  color: var(--foreground);
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
+}
+
+.screen {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+}
+
+.screen-loading {
+  display: flex;
+  height: 100dvh;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+
+/* div.map-container: MapLibre stamps its own .maplibregl-map (position:
+   relative) onto the same div, so a bare class tie is lost to source order
+   and the container collapses to 0 height — an all-black map. */
+div.map-container {
+  position: absolute;
+  inset: 0;
+}
+
+.map-container .maplibregl-ctrl-attrib {
+  font-size: 11px;
+}
+
+.panel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  min-width: 220px;
+  padding: 12px 14px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(6px);
+}
+
+.panel-title {
+  margin-bottom: 8px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.panel-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 3px 0;
+  font-size: 14px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.panel-row input {
+  accent-color: var(--accent);
+}
+
+.panel-footer {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--panel-border);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.panel-error {
+  color: var(--danger);
+}
+
+.panel-error button {
+  border: none;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Stationary camera marker: rotated direction arrow with a speed badge. */
+.camera-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  width: 34px;
+  height: 40px;
+  cursor: pointer;
+}
+
+.camera-marker-arrow {
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 8px 22px 8px;
+  border-color: transparent transparent var(--accent) transparent;
+}
+
+.camera-marker-speed {
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 15px;
+  color: #ffffff;
+  background: var(--accent);
+  border-radius: 7px;
+}
+
+.site-popup {
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.site-popup strong {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.site-popup-muted {
+  color: var(--muted);
+}
