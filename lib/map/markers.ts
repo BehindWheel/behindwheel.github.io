@@ -70,33 +70,17 @@ export function showPopup(map: maplibregl.Map, lngLat: maplibregl.LngLat, html: 
 
 type SignMarkerOptions = {
   icon: string;
-  // A thin direction ray above the sign, rotated clockwise from north by the
-  // camera angle — the read-only echo of the dashboard's rays. CSS rotation
-  // never follows map bearing; the public map is north-locked, so it shows.
-  rayAngle?: number;
-  verified?: boolean;
 };
 
-function createSignMarker({ icon, rayAngle, verified }: SignMarkerOptions): maplibregl.Marker {
+function createSignMarker({ icon }: SignMarkerOptions): maplibregl.Marker {
   const element = document.createElement("div");
   element.className = "sign-marker";
-  if (rayAngle !== undefined) {
-    const ray = document.createElement("span");
-    ray.className = "marker-ray";
-    ray.style.transform = `rotate(${rayAngle}deg)`;
-    element.appendChild(ray);
-  }
   const body = document.createElement("span");
   body.className = "marker-body";
   const img = document.createElement("img");
   img.src = icon;
   img.alt = "";
   body.appendChild(img);
-  if (verified) {
-    const badge = document.createElement("span");
-    badge.className = "marker-verified-badge";
-    body.appendChild(badge);
-  }
   element.appendChild(body);
   return new maplibregl.Marker({ element, anchor: "bottom" });
 }
@@ -141,10 +125,10 @@ export function createMarkerGroups(data: {
     stationary: buildGroup(
       data.stationary.filter((camera) => camera.point),
       (camera) =>
-        createSignMarker({
-          icon: ICONS.camera,
-          rayAngle: camera.angle,
-        }).setLngLat([camera.point.lng, camera.point.lat]),
+        createSignMarker({ icon: ICONS.camera }).setLngLat([
+          camera.point.lng,
+          camera.point.lat,
+        ]),
     ),
     mediumSpeed: buildGroup(
       data.mediumSpeed.filter((camera) => camera.points.length > 0),
@@ -162,7 +146,6 @@ export function createMarkerGroups(data: {
         const at = repair.point ?? repair.points![0];
         return createSignMarker({
           icon: repair.type === "point" ? ICONS.repairsPoint : ICONS.repairsLine,
-          verified: repair.verified,
         }).setLngLat([at.lng, at.lat]);
       },
     ),

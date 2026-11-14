@@ -26,31 +26,6 @@
   display: block;
 }
 
-/* Thin direction ray above the sign, rotated from north by the camera angle —
-   the read-only echo of the dashboard rays (the accent token color). */
-.marker-ray {
-  position: absolute;
-  bottom: 16px;
-  left: calc(50% - 1px);
-  width: 2px;
-  height: 16px;
-  background: rgba(15, 108, 189, 0.8);
-  border-radius: 1px;
-  transform-origin: bottom center;
-}
-
-.marker-verified-badge {
-  position: absolute;
-  top: -3px;
-  right: -5px;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  border: 1.5px solid #ffffff;
-  background: #0e700e;
-  box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
-}
-
 .site-popup {
   font-family: inherit;
   font-size: 13px;
