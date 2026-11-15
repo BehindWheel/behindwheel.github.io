@@ -9,12 +9,14 @@ on an interactive MapLibre map. Published at https://behindwheel.github.io/.
 - **Next.js static export** (`output: "export"`): GitHub Pages serves the `out/`
   directory produced by `npm run build` — no server, everything renders client-side.
 - **Data is fetched live** from the public CDN (`https://cdn-data.behindwheel.workers.dev`):
-  `manifest.json` first, then the three feature files. The CDN sets
-  `max-age=0, must-revalidate` + ETag, so the browser revalidates on every visit
-  (304 when nothing changed) and the site always shows fresh data — no rebuild needed.
-  The data contract is documented in the pipeline repo, `docs/integrations/cdn.md`.
-- **MapLibre GL JS 5.x + OpenFreeMap Liberty** basemap (free, no API key), with an
-  optional Esri World Imagery satellite toggle.
+  `manifest.json` first, then the three feature files, each verified against the
+  sha256 the manifest carries. The CDN sets `max-age=0, must-revalidate` + ETag, so
+  the browser revalidates on every visit (304 when nothing changed) and the site
+  always shows fresh data — no rebuild needed. The data contract is documented in
+  the pipeline repo, `docs/integrations/cdn.md`.
+- **MapLibre GL JS 6.x + OpenFreeMap Liberty** basemap (free, no API key).
+- **PWA**: a web manifest plus an offline service worker — the app shell and the
+  last CDN snapshot survive a dropped connection; map tiles are not cached.
 
 ## Development
 
@@ -22,10 +24,12 @@ on an interactive MapLibre map. Published at https://behindwheel.github.io/.
 npm install
 npm run dev       # http://localhost:3000
 npm run lint      # eslint
+npm test          # vitest — the lib/ helpers
 npm run build     # static export into out/
 ```
 
-To check the production build locally, serve the export:
+To check the production build locally, serve the export (and let the service
+worker register — it only does so on a production build):
 
 ```bash
 npx serve out
