@@ -8,6 +8,7 @@ import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { loadCdnData, REGIONS, type CdnData } from "@/lib/cdn";
 import { loadToggles, saveToggles } from "@/lib/layerToggles";
+import { searchObjects, type SearchHit } from "@/lib/search";
 import { createMap, onStyleLoad } from "@/lib/map/createMap";
 import { markerSearch, parseMarkerParam } from "@/lib/routing";
 import { getTheme, onThemeChange, setTheme, type Theme } from "@/lib/theme";
@@ -77,6 +78,14 @@ function formatGeneratedAt(iso: string): string {
 // horizon as the app banner's storage TTL, for the same ITP reasons.
 const STALE_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
 
+// A search hit wears the same artwork the filter rows and markers use — the
+// icon names the kind without parsing the label.
+const KIND_ICONS: Record<SelectionKind, string> = {
+  stationary: "/icons/camera.svg",
+  mediumSpeed: "/icons/medium-speed.svg",
+  repairs: "/icons/road-repairs-point.svg",
+};
+
 export default function MapScreen() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -105,12 +114,18 @@ export default function MapScreen() {
   // week, computed when the data lands — not during render, where a clock
   // read breaks purity. An invalid timestamp compares NaN → false.
   const [stale, setStale] = useState(false);
+  // The panel's search: a query and its hits, derived — no state of its own.
+  const [query, setQuery] = useState("");
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selected, setSelected] = useState<SelectedFeature | null>(null);
   // The data in state drives the detail panel; the ref twin drives the
   // style-swap replay, which runs outside render.
   const [data, setData] = useState<CdnData | null>(null);
+  const hits = useMemo(
+    () => (data && query.trim() !== "" ? searchObjects(data, query) : []),
+    [data, query],
+  );
   // The install banner: dismissed-ness lives in localStorage — external state
   // read through useSyncExternalStore. The server snapshot says dismissed, so
   // the prerendered HTML ships without the banner and it appears on hydration.
@@ -141,6 +156,18 @@ export default function MapScreen() {
       updateUrl(id);
     },
     [updateUrl],
+  );
+
+  const pickHit = useCallback(
+    (hit: SearchHit) => {
+      selectFeature(hit.kind, hit.id);
+      // The panel covers half the phone: fly to the sign so the pick lands
+      // where the user can see it.
+      tiersRef.current?.flyToSign(hit.id);
+      setFiltersOpen(false);
+      setQuery("");
+    },
+    [selectFeature],
   );
 
   // The data promise comes from the caller: the map effect starts the fetch
@@ -369,6 +396,37 @@ export default function MapScreen() {
         </button>
         {filtersOpen && (
           <div className="panel" id="layer-panel" inert={backgroundInert ? true : undefined}>
+            {/* Search first — it's the primary way in once you know what
+               you're looking for. Hits open the detail and fly to the sign. */}
+            <div className="panel-search">
+              <input
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Поиск: камера, дорога…"
+                aria-label="Поиск объекта на карте"
+              />
+              {query.trim() !== "" &&
+                (hits.length > 0 ? (
+                  <ul className="panel-search-results">
+                    {hits.map((hit) => (
+                      <li key={`${hit.kind}:${hit.id}`}>
+                        <button type="button" onClick={() => pickHit(hit)}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            className="panel-row-icon"
+                            src={KIND_ICONS[hit.kind]}
+                            alt=""
+                          />
+                          {hit.label}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="panel-search-empty">Ничего не найдено</p>
+                ))}
+            </div>
             <div className="panel-title">Слои карты</div>
             <div className="panel-group" role="group" aria-label="Слои карты">
               <label className="panel-row">
