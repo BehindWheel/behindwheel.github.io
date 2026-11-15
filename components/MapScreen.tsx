@@ -128,44 +128,57 @@ export default function MapScreen() {
     [updateUrl],
   );
 
-  const loadData = useCallback(async (map: maplibregl.Map) => {
-    try {
-      const data = await loadCdnData();
-      // Re-check after the fetch: the map can be unmounted while the CDN
-      // round-trip is in flight (StrictMode double mount, fast navigation)
-      // and adding markers to a dead map still attaches elements to the
-      // live container — the double set of badges seen live.
-      if (mapRef.current !== map) {
-        return;
+  // The data promise comes from the caller: the map effect starts the fetch
+  // on mount, racing the style/tile load instead of trailing it — awaiting
+  // the map first would serialize the CDN round-trip behind it. retry()
+  // builds a fresh promise the same way.
+  const loadData = useCallback(
+    async (map: maplibregl.Map, pending: Promise<CdnData>) => {
+      try {
+        const data = await pending;
+        // Re-check after the fetch: the map can be unmounted while the CDN
+        // round-trip is in flight (StrictMode double mount, fast navigation)
+        // and adding markers to a dead map still attaches elements to the
+        // live container — the double set of badges seen live.
+        if (mapRef.current !== map) {
+          return;
+        }
+        dataRef.current = data;
+        setData(data);
+        if (!markersRef.current) {
+          markersRef.current = createMarkerGroups(data);
+          addMarkerGroups(map, markersRef.current);
+          bindMarkerSelections(markersRef.current, selectFeature);
+          // The tier logic takes over sign visibility right away — its
+          // constructor runs the first update for the current view.
+          tiersRef.current = new MarkerTiers(map, markersRef.current, togglesRef.current);
+        }
+        applyOverlays(map, data);
+        bindLayerSelection(map, selectFeature);
+        setGeneratedAt(data.generatedAt);
+        setStatus("ready");
+        // A shared link's ?marker=<id> opens the panel once the data exists to
+        // resolve it; an unresolvable id falls through to the not-found face.
+        const id = parseMarkerParam(window.location.search);
+        if (id) {
+          setSelected({ kind: resolveKind(data, id) ?? "unknown", id });
+          // The landing zoom may sit in the dot tier — fly into the sign tiers
+          // so the linked marker itself is visible.
+          tiersRef.current?.flyToSign(id);
+        }
+      } catch (error) {
+        // Same guard as above: a fetch resolving against a dead map is
+        // dropped, and so is its error — the retry button belongs to the
+        // live screen only.
+        if (mapRef.current !== map) {
+          return;
+        }
+        setErrorMessage(error instanceof Error ? error.message : String(error));
+        setStatus("error");
       }
-      dataRef.current = data;
-      setData(data);
-      if (!markersRef.current) {
-        markersRef.current = createMarkerGroups(data);
-        addMarkerGroups(map, markersRef.current);
-        bindMarkerSelections(markersRef.current, selectFeature);
-        // The tier logic takes over sign visibility right away — its
-        // constructor runs the first update for the current view.
-        tiersRef.current = new MarkerTiers(map, markersRef.current, togglesRef.current);
-      }
-      applyOverlays(map, data);
-      bindLayerSelection(map, selectFeature);
-      setGeneratedAt(data.generatedAt);
-      setStatus("ready");
-      // A shared link's ?marker=<id> opens the panel once the data exists to
-      // resolve it; an unresolvable id falls through to the not-found face.
-      const id = parseMarkerParam(window.location.search);
-      if (id) {
-        setSelected({ kind: resolveKind(data, id) ?? "unknown", id });
-        // The landing zoom may sit in the dot tier — fly into the sign tiers
-        // so the linked marker itself is visible.
-        tiersRef.current?.flyToSign(id);
-      }
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : String(error));
-      setStatus("error");
-    }
-  }, [selectFeature]);
+    },
+    [selectFeature],
+  );
 
   useEffect(() => {
     const container = containerRef.current;
@@ -175,7 +188,14 @@ export default function MapScreen() {
     const map = createMap(container);
     mapRef.current = map;
 
-    const load = () => void loadData(map);
+    // The fetch starts on mount, in parallel with the style/tile load. The
+    // pre-attached catch keeps an early rejection silent until loadData
+    // observes it — a map that never fires "load" would otherwise leave the
+    // rejection unobserved forever.
+    const dataPromise = loadCdnData();
+    dataPromise.catch(() => {});
+
+    const load = () => void loadData(map, dataPromise);
 
     // setStyle() wipes sources/layers, so overlays are replayed on top of the
     // new basemap; data refetch is unnecessary — the DOM markers survive.
@@ -246,7 +266,7 @@ export default function MapScreen() {
       return;
     }
     setStatus("loading");
-    void loadData(map);
+    void loadData(map, loadCdnData());
   }, [loadData]);
 
   // The theme toggle: an explicit choice rides localStorage through
