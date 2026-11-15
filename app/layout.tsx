@@ -16,7 +16,12 @@ const THEME_BOOTSTRAP = `(function(){try{var t=localStorage.getItem("theme");if(
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="ru">
+    // suppressHydrationWarning: the bootstrap script below stamps
+    // data-theme onto <html> before hydration — by design, the theme must
+    // resolve before the first paint — and the server-rendered tag can't
+    // know it. The warning React otherwise logs every load is exactly the
+    // attribute-only mismatch this escape hatch exists for.
+    <html lang="ru" suppressHydrationWarning>
       <body>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
         {children}
