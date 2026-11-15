@@ -1,29 +1,23 @@
-"use client";
+import HomeClient from "@/components/HomeClient";
 
-import dynamic from "next/dynamic";
-import { preconnect } from "react-dom";
-
-// MapLibre touches window on import, so the map is client-only. The chunk
-// placeholder stays blank on screen — a "Загрузка карты…" that vanishes in a
-// beat reads as a hang, and the map renders its own tiles progressively right
-// after — but keeps the announcement for screen readers: a bare empty div is
-// silence, so the text sits in a status region, visually hidden.
-const MapScreen = dynamic(() => import("@/components/MapScreen"), {
-  ssr: false,
-  loading: () => (
-    <div className="screen-loading" role="status">
-      <span className="sr-only">Загрузка карты…</span>
-    </div>
-  ),
-});
-
+// The map renders client-side only (HomeClient), so the static export ships
+// just a loading placeholder — nothing for a crawler to read. This
+// server-rendered block is the page's indexable face: the same facts as the
+// meta description plus the region names a query would carry, visually
+// hidden but honest — it describes exactly what the site shows.
 export default function Home() {
-  // Resource hints through ReactDOM — the metadata API carries no preconnect
-  // (the docs' resource-hints section). Both hosts are CORS-fetched (maplibre
-  // tiles and glyphs, the CDN data), so the connection must be anonymous to
-  // be reusable by fetch(). page.tsx is client code but still SSRs, so the
-  // hints land in the first HTML; the calls dedupe, re-rendering is fine.
-  preconnect("https://cdn-data.behindwheel.workers.dev", { crossOrigin: "anonymous" });
-  preconnect("https://tiles.openfreemap.org", { crossOrigin: "anonymous" });
-  return <MapScreen />;
+  return (
+    <>
+      <section className="sr-only">
+        <h1>Grodno Roads — камеры и ремонты дорог</h1>
+        <p>
+          Публичная карта стационарных камер контроля скорости, участков
+          средней скорости и ремонтов дорог: Гродненская, Минская, Брестская,
+          Витебская, Гомельская и Могилёвская области. Данные обновляются
+          автоматически; выбранный объект кодируется в адресе страницы.
+        </p>
+      </section>
+      <HomeClient />
+    </>
+  );
 }
