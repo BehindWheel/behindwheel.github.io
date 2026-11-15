@@ -2,10 +2,38 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 
+// metadataBase turns the relative og:image path into an absolute URL —
+// without it a relative openGraph image is a build error, and scrapers
+// (Telegram, Viber) only read absolute ones.
 export const metadata: Metadata = {
+  metadataBase: new URL("https://behindwheel.github.io"),
   title: "Grodno Roads — камеры и ремонты дорог",
   description:
     "Публичная карта стационарных камер, участков средней скорости и ремонтов дорог Гродно и области.",
+  openGraph: {
+    type: "website",
+    locale: "ru_RU",
+    url: "/",
+    siteName: "За рулем",
+    title: "Grodno Roads — камеры и ремонты дорог",
+    description:
+      "Публичная карта стационарных камер, участков средней скорости и ремонтов дорог Гродно и области.",
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: "За рулем — карта камер и ремонтов дорог Гродно и области",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Grodno Roads — камеры и ремонты дорог",
+    description:
+      "Публичная карта стационарных камер, участков средней скорости и ремонтов дорог Гродно и области.",
+    images: ["/og.png"],
+  },
 };
 
 // The theme must resolve before the first paint: the stored choice or the
