@@ -19,7 +19,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Work always happens on a fresh branch cut from the latest `main` — fetch first (`git fetch origin main && git checkout -b <name> origin/main`); never commit to `main` directly.
 - A PR merges only after approval, via rebase — no merge commits, the history stays linear.
 - A PR title and description are always in English, no matter what language the chat or the UI strings use — the repo is public and the history is the documentation.
-- A PR that resolves a ticket references it in the description with a bare `Closes #<issue number>` — not "fixes", not a bare link: GitHub links the PR to the issue and auto-closes it on merge.
+- A PR that resolves a ticket references it in the description as a list item: `- Closes #<issue number>` — not "fixes", not a bare link: GitHub links the PR to the issue and auto-closes it on merge.
 
 ## Merges
 
