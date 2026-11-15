@@ -41,17 +41,19 @@
   display: block;
 }
 
-/* The region badge (issue #34, the country band): a light panel pill — name +
-   count — floating over its oblast's centroid. Deliberately quieter than the
-   filter panel: translucent surface, small type — it must not fight the
-   basemap's own oblast labels. Same surface tokens in both schemes. */
+/* The region badge (issue #34): two lines, both centered — the name on top,
+   the per-kind breakdown under it. The same artwork the filter panel and the
+   detail header use, so the composition reads in icons. Deliberately quieter
+   than the filter panel: translucent surface, small type — it must not fight
+   the basemap's own labels. Same surface tokens in both schemes. */
 .region-badge {
   display: flex;
-  gap: 6px;
+  flex-direction: column;
+  gap: 3px;
   align-items: center;
-  padding: 4px 10px;
+  padding: 5px 12px 6px;
   border: 1px solid var(--panel-border, #d4d4d8);
-  border-radius: 999px;
+  border-radius: 10px;
   background: color-mix(in srgb, var(--panel-bg, rgba(255, 255, 255, 0.92)) 82%, transparent);
   color: var(--foreground, #18181b);
   font-size: 12px;
@@ -74,11 +76,17 @@
   outline-offset: 2px;
 }
 
+.region-badge-kinds {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 /* The per-kind breakdown: the same artwork the filter panel and the detail
    header use — the oblast's composition reads in icons, no text parsing. */
 .region-badge-kind {
   display: flex;
-  gap: 2px;
+  gap: 3px;
   align-items: center;
   color: var(--muted, #52525b);
   font-size: 11px;
