@@ -175,6 +175,31 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
       : detail.camera.name
     : "Не найдено";
 
+  // Share: the selected marker already rides the URL as ?marker=<id>, but
+  // nothing on the panel said so. navigator.share opens the OS sheet on
+  // mobile; where it doesn't exist (desktop) the link lands on the
+  // clipboard with a brief "Скопировано" on the button itself. A user
+  // canceling the OS sheet rejects the promise — that's not an error face.
+  const [copied, setCopied] = useState(false);
+  const share = useCallback(() => {
+    const url = window.location.href;
+    if (typeof navigator.share === "function") {
+      void navigator.share({ title, url }).catch(() => {});
+      return;
+    }
+    void navigator.clipboard?.writeText(url).then(
+      () => setCopied(true),
+      () => {},
+    );
+  }, [title]);
+  useEffect(() => {
+    if (!copied) {
+      return;
+    }
+    const timer = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(timer);
+  }, [copied]);
+
   useEffect(() => {
     // The dialog pattern (aria-patterns.md): focus moves into the panel on
     // open and returns to the trigger (the marker that was focused) on close.
@@ -275,14 +300,45 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
           {/* The not-found face has its own Понятно action — a second close
              control in the header would be redundant. */}
           {detail && (
-            <button
-              type="button"
-              className="detail-close"
-              onClick={requestClose}
-              aria-label="Закрыть"
-            >
-              ✕
-            </button>
+            <div className="detail-actions">
+              <button
+                type="button"
+                className="detail-share"
+                onClick={share}
+                aria-label={copied ? "Ссылка скопирована" : "Поделиться ссылкой"}
+                title={copied ? "Ссылка скопирована" : "Поделиться ссылкой"}
+              >
+                {copied ? (
+                  "✓"
+                ) : (
+                  /* One-off stateful glyph, inline in currentColor per the
+                     icon conventions: the iOS-style share square. */
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="18"
+                    height="18"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 3v11" />
+                    <path d="m7.5 7.5 4.5-4.5 4.5 4.5" />
+                    <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />
+                  </svg>
+                )}
+              </button>
+              <button
+                type="button"
+                className="detail-close"
+                onClick={requestClose}
+                aria-label="Закрыть"
+              >
+                ✕
+              </button>
+            </div>
           )}
         </div>
         <div className="detail-rows">
