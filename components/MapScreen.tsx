@@ -300,6 +300,20 @@ export default function MapScreen() {
   // A selection with no matching detail is the ?marker= 404 — the panel is
   // still open, it just shows its not-found face.
   const panelOpen = selected !== null;
+  // The dialog pattern silences the background — but only where the sheet
+  // actually covers the map. From 768px the panel is a side sheet and most
+  // of the map stays visible, so panning it with the panel open is
+  // legitimate; the compact breakpoint matches the CSS (max-width: 767px).
+  const [compact, setCompact] = useState(
+    () => window.matchMedia("(max-width: 767px)").matches,
+  );
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 767px)");
+    const onChange = () => setCompact(media.matches);
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
+  }, []);
+  const backgroundInert = panelOpen && compact;
   const detail = useMemo(
     () => (data && selected ? findDetail(data, selected) : null),
     [data, selected],
@@ -311,7 +325,7 @@ export default function MapScreen() {
          MapLibre's default trackResize re-fits the canvas when it leaves. */}
       {!bannerDismissed && <AppBanner onClose={closeBanner} />}
       <div className="map-area">
-        <div ref={containerRef} className="map-container" inert={panelOpen ? true : undefined} />
+        <div ref={containerRef} className="map-container" inert={backgroundInert ? true : undefined} />
         <button
           type="button"
           className="filter-button"
@@ -335,7 +349,7 @@ export default function MapScreen() {
           />
         </button>
         {filtersOpen && (
-          <div className="panel" id="layer-panel" inert={panelOpen ? true : undefined}>
+          <div className="panel" id="layer-panel" inert={backgroundInert ? true : undefined}>
             <div className="panel-title">Слои карты</div>
             <div className="panel-group" role="group" aria-label="Слои карты">
               <label className="panel-row">
