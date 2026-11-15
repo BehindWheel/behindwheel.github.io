@@ -180,6 +180,17 @@ div.map-container {
   opacity: 0.5;
 }
 
+/* The stock geolocate :disabled rule re-asserts its own red-slashed sprite SVG
+   and ties our background-image: none override on specificity — the slash
+   leaks through our mask as a faint red stroke across the glyph. One notch
+   more specific, same skin decision as above: the glyph is ours. */
+.map-container
+  .maplibregl-ctrl.maplibregl-ctrl-group
+  button.maplibregl-ctrl-geolocate:disabled
+  .maplibregl-ctrl-icon {
+  background-image: none;
+}
+
 /* the control cards stack with a breathing gap, at the same 12px inset as
    the filter button's corner (the ⓘ attribution rides the same container) */
 .map-container .maplibregl-ctrl-bottom-right {
