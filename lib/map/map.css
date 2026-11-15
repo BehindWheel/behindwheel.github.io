@@ -76,6 +76,50 @@
   display: none;
 }
 
+/* The dot tier's hover tooltip: the kind's artwork + a bare name chip above
+   the dot. CSS-only — the text lives in data-tooltip, the icon in the
+   per-kind background below; no listeners to wire or clean up. Hover and
+   keyboard focus both show it; touch just taps through to the panel. */
+.sign-marker.dot-mode::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 3px 8px 3px 24px;
+  border-radius: 6px;
+  background-color: var(--panel-bg, rgba(255, 255, 255, 0.92));
+  background-repeat: no-repeat;
+  background-position: 6px center;
+  background-size: 13px 14px;
+  border: 1px solid var(--panel-border, #d4d4d8);
+  color: var(--foreground, #18181b);
+  font-size: 11px;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.2);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+  z-index: 5;
+}
+
+.sign-marker.dot-mode[data-kind="stationary"]::after {
+  background-image: url("/icons/camera.svg");
+}
+
+.sign-marker.dot-mode[data-kind="mediumSpeed"]::after {
+  background-image: url("/icons/medium-speed.svg");
+}
+
+.sign-marker.dot-mode[data-kind="repairs"]::after {
+  background-image: url("/icons/road-repairs-point.svg");
+}
+
+.sign-marker.dot-mode:hover::after,
+.sign-marker.dot-mode:focus-visible::after {
+  opacity: 1;
+}
+
 .sign-marker[data-kind="stationary"] .marker-dot {
   background: var(--foreground, #18181b);
 }
