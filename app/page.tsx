@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { preconnect } from "react-dom";
 
 // MapLibre touches window on import, so the map is client-only. The chunk
 // placeholder stays blank on screen — a "Загрузка карты…" that vanishes in a
@@ -17,5 +18,12 @@ const MapScreen = dynamic(() => import("@/components/MapScreen"), {
 });
 
 export default function Home() {
+  // Resource hints through ReactDOM — the metadata API carries no preconnect
+  // (the docs' resource-hints section). Both hosts are CORS-fetched (maplibre
+  // tiles and glyphs, the CDN data), so the connection must be anonymous to
+  // be reusable by fetch(). page.tsx is client code but still SSRs, so the
+  // hints land in the first HTML; the calls dedupe, re-rendering is fine.
+  preconnect("https://cdn-data.behindwheel.workers.dev", { crossOrigin: "anonymous" });
+  preconnect("https://tiles.openfreemap.org", { crossOrigin: "anonymous" });
   return <MapScreen />;
 }
