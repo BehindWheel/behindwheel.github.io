@@ -17,7 +17,9 @@ export type Detail =
   | { kind: "repairs"; repair: RoadRepair };
 
 type DetailPanelProps = {
-  detail: Detail;
+  // null — the ?marker= link points at an id the current data no longer
+  // carries (the CDN rotates); the panel renders its not-found face.
+  detail: Detail | null;
   onClose: () => void;
 };
 
@@ -132,8 +134,11 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
     }
   };
 
-  const title =
-    detail.kind === "repairs" ? detail.repair.road : detail.camera.name;
+  const title = detail
+    ? detail.kind === "repairs"
+      ? detail.repair.road
+      : detail.camera.name
+    : "Не найдено";
 
   useEffect(() => {
     // The dialog pattern (aria-patterns.md): focus moves into the panel on
@@ -220,8 +225,16 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
             ✕
           </button>
         </div>
-        <div className="detail-rows">{detailRows(detail)}</div>
-        {detail.kind === "repairs" && detail.repair.note && (
+        <div className="detail-rows">
+          {detail ? (
+            detailRows(detail)
+          ) : (
+            <p className="detail-note">
+              Объект не найден — данные обновились или ссылка устарела.
+            </p>
+          )}
+        </div>
+        {detail?.kind === "repairs" && detail.repair.note && (
           <p className="detail-note">{detail.repair.note}</p>
         )}
       </div>
