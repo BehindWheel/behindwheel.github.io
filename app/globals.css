@@ -563,6 +563,13 @@ div.map-container {
   animation: detail-slide-up 250ms cubic-bezier(0, 0, 0.2, 1);
 }
 
+/* The panel takes the dialog's initial focus (tabindex=-1 container); the
+   outline is a keyboard-only affordance and a container is not a control —
+   keyboard users still Tab from here into the rows and the close button. */
+.detail-panel:focus {
+  outline: none;
+}
+
 @media (min-width: 768px) {
   .detail-panel {
     top: 0;
