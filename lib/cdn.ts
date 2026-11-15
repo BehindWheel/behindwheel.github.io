@@ -75,6 +75,18 @@ export function regionName(slug: string): string {
   return REGION_NAMES[slug] ?? slug;
 }
 
+// The slugs the CDN actually carries, in the map's north-to-south reading
+// order — the region filter's option list and the search's region facets
+// both walk this.
+export const REGIONS: { slug: string; name: string }[] = [
+  { slug: "brest", name: "Брестская" },
+  { slug: "vitebsk", name: "Витебская" },
+  { slug: "grodno", name: "Гродненская" },
+  { slug: "gomel", name: "Гомельская" },
+  { slug: "minsk", name: "Минская" },
+  { slug: "mogilev", name: "Могилёвская" },
+];
+
 export type CdnData = {
   generatedAt: string;
   stationary: StationaryCamera[];

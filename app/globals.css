@@ -1049,3 +1049,31 @@ div.map-container {
 .detail-share:hover {
   color: var(--foreground);
 }
+
+/* The region row sits under the layer toggles, divided off like they are.
+   The select stretches to the row's right edge and wears the panel skin —
+   native dropdown, no custom list to maintain. */
+.panel-region {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 0 14px 10px;
+  font-size: 13px;
+  color: var(--foreground);
+  user-select: none;
+}
+
+.panel-region select {
+  flex: 1;
+  max-width: 150px;
+  min-height: 32px;
+  padding: 0 6px;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: var(--panel-bg);
+  color: var(--foreground);
+  font: inherit;
+  cursor: pointer;
+}

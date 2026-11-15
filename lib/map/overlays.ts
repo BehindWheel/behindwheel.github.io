@@ -70,7 +70,18 @@ function repairsLineCollection(items: RoadRepair[]): FeatureCollection<LineStrin
   };
 }
 
-export function applyOverlays(map: maplibregl.Map, data: CdnData): void {
+// The overlays follow the region filter the same way the markers do: a
+// region (or null for the whole country) filters what lands in the GeoJSON
+// sources — the lines disappear with their signs, hit layers included,
+// because both read the same source.
+export function applyOverlays(
+  map: maplibregl.Map,
+  data: CdnData,
+  region: string | null = null,
+): void {
+  const inRegion = <T extends { region: string }>(items: T[]): T[] =>
+    region === null ? items : items.filter((item) => item.region === region);
+
   for (const sourceId of SOURCE_IDS) {
     if (!map.getSource(sourceId)) {
       map.addSource(sourceId, {
@@ -81,10 +92,10 @@ export function applyOverlays(map: maplibregl.Map, data: CdnData): void {
   }
 
   (map.getSource("medium-speed") as maplibregl.GeoJSONSource).setData(
-    mediumSpeedCollection(data.mediumSpeed),
+    mediumSpeedCollection(inRegion(data.mediumSpeed)),
   );
   (map.getSource("repairs") as maplibregl.GeoJSONSource).setData(
-    repairsLineCollection(data.repairs),
+    repairsLineCollection(inRegion(data.repairs)),
   );
 
   if (!map.getLayer(LAYER_IDS.mediumSpeed)) {
