@@ -13,7 +13,6 @@
 // so do the line layers.
 
 import * as maplibregl from "maplibre-gl";
-import type { CdnData } from "../cdn";
 import { MARKER_KINDS, type MarkerGroups, type SelectionKind } from "./markers";
 import { LAYER_IDS, setLayerVisibility } from "./overlays";
 
@@ -69,9 +68,6 @@ export class MarkerTiers {
   constructor(
     map: maplibregl.Map,
     groups: MarkerGroups,
-    // The CDN data no longer drives the tiers — kept in the signature so a
-    // future data-driven tier (per-region thresholds) drops in cleanly.
-    _data: CdnData,
     toggles: LayerToggles,
   ) {
     this.map = map;
