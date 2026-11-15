@@ -10,9 +10,6 @@ import type { CdnData, CdnPoint, MediumSpeedCamera, RoadRepair } from "../cdn";
 import type { SelectFeature } from "./markers";
 import {
   MEDIUM_SPEED_LINE_COLOR,
-  REPAIRS_CASE_COLOR,
-  REPAIRS_CASE_DARK_COLOR,
-  REPAIRS_CASE_WIDTH,
   REPAIRS_DASHARRAY,
   REPAIRS_LINE_COLOR,
   REPAIRS_LINE_DARK_COLOR,
@@ -21,7 +18,6 @@ import {
 
 export const LAYER_IDS = {
   mediumSpeed: "medium-speed-line",
-  repairsCase: "repairs-line-case",
   repairsLines: "repairs-line",
   // Invisible fat targets over the visible lines — clicks land on these, the
   // dashboard overlays.js rule.
@@ -32,8 +28,9 @@ export const LAYER_IDS = {
 const SOURCE_IDS = ["medium-speed", "repairs"] as const;
 
 // The visible stroke; three times its width at least 16 px is the finger
-// target — the hitbox carries the clicks, not the stroke.
-const LINE_WIDTH = 4;
+// target — the hitbox carries the clicks, not the stroke. For the test it
+// matches the repairs stroke (REPAIRS_WIDTH in style.ts).
+const LINE_WIDTH = 2.5;
 const HIT_LINE_WIDTH = 16;
 
 const toLineGeometry = (points: CdnPoint[]): LineString => ({
@@ -118,39 +115,21 @@ export function applyOverlays(map: maplibregl.Map, data: CdnData): void {
   }
 
   if (!map.getLayer(LAYER_IDS.repairsLines)) {
-    // The roadwork read: a solid casing first, then the dashed stroke on
-    // top. The dasharray is in line-width units, and both layers' widths
-    // are fixed constants — the pattern stays constant screen-size at every
-    // zoom, no interpolation needed.
-    map.addLayer({
-      id: LAYER_IDS.repairsCase,
-      type: "line",
-      source: "repairs",
-      layout: {
-        "line-cap": "round",
-        "line-join": "round",
-      },
-      paint: {
-        "line-color":
-          getTheme() === "dark" ? REPAIRS_CASE_DARK_COLOR : REPAIRS_CASE_COLOR,
-        "line-width": REPAIRS_CASE_WIDTH,
-        "line-opacity": 1,
-      },
-    });
     map.addLayer({
       id: LAYER_IDS.repairsLines,
       type: "line",
       source: "repairs",
       layout: {
-        // Butt caps: a round cap bloats every dash into a pill — the casing
-        // below carries the rounded ends for the whole line.
+        // Butt caps: a round cap bloats every dash into a pill — the literal
+        // dasharray geometry stays visible.
         "line-cap": "butt",
         "line-join": "round",
       },
       paint: {
         // On the dark basemap the repairs red reads its lighter step; the
         // layers are re-added on every style.load, so the choice is picked
-        // fresh each time the basemap swaps.
+        // fresh each time the basemap swaps. No casing — just the red, per
+        // the user's call.
         "line-color":
           getTheme() === "dark" ? REPAIRS_LINE_DARK_COLOR : REPAIRS_LINE_COLOR,
         "line-width": REPAIRS_WIDTH,
