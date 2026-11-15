@@ -80,6 +80,15 @@
   background: var(--foreground, #18181b);
 }
 
+/* Pure ink white reads as anonymous blobs on the dark basemap — the camera
+   dot wears the sign ink instead, and the white ring fades to a soft halo:
+   at 12px a solid ring would dominate the face and the dot would read white
+   again. */
+:root[data-theme="dark"] .sign-marker[data-kind="stationary"] .marker-dot {
+  background: #232f34;
+  border-color: rgb(255 255 255 / 0.4);
+}
+
 .sign-marker[data-kind="mediumSpeed"] .marker-dot {
   background: #d97b1f;
 }
