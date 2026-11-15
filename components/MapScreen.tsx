@@ -72,6 +72,11 @@ function formatGeneratedAt(iso: string): string {
   }).format(new Date(iso));
 }
 
+// The pipeline regenerates the data continuously; a timestamp older than a
+// week means the feed has stalled — worth saying so on the map itself. Same
+// horizon as the app banner's storage TTL, for the same ITP reasons.
+const STALE_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
+
 export default function MapScreen() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -91,6 +96,10 @@ export default function MapScreen() {
   const togglesRef = useRef(toggles);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
+  // The freshness face of the pill: the pipeline's timestamp read against a
+  // week, computed when the data lands — not during render, where a clock
+  // read breaks purity. An invalid timestamp compares NaN → false.
+  const [stale, setStale] = useState(false);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selected, setSelected] = useState<SelectedFeature | null>(null);
@@ -157,6 +166,9 @@ export default function MapScreen() {
         applyOverlays(map, data);
         bindLayerSelection(map, selectFeature);
         setGeneratedAt(data.generatedAt);
+        setStale(
+          Date.now() - new Date(data.generatedAt).getTime() > STALE_AFTER_MS,
+        );
         setStatus("ready");
         // A shared link's ?marker=<id> opens the panel once the data exists to
         // resolve it; an unresolvable id falls through to the not-found face.
@@ -368,21 +380,31 @@ export default function MapScreen() {
                 <img className="panel-row-icon" src="/icons/road-repairs-point.svg" alt="" />
               </label>
             </div>
-            <div className="panel-footer" aria-live="polite">
-              {status === "loading" && <span>Загрузка данных…</span>}
-              {status === "error" && (
-                <span className="panel-error">
-                  Не удалось загрузить данные: {errorMessage}{" "}
-                  <button type="button" onClick={retry}>
-                    Повторить
-                  </button>
-                </span>
-              )}
-              {status === "ready" && generatedAt && (
-                <span>Данные от {formatGeneratedAt(generatedAt)}</span>
-              )}
-            </div>
           </div>
+        )}
+        {/* The data status rides the map itself: the filters panel is closed
+           by default, so a status hidden inside it said nothing. The pill
+           carries loading and freshness (announced politely); the error gets
+           its own alert card with the retry — it must not be missable. */}
+        {status === "error" ? (
+          <div className="map-error" role="alert">
+            <span>Не удалось загрузить данные: {errorMessage}</span>
+            <button type="button" onClick={retry}>
+              Повторить
+            </button>
+          </div>
+        ) : (
+          <p
+            className={`data-pill${stale ? " data-pill-stale" : ""}`}
+            role="status"
+          >
+            {status === "loading" && "Загрузка данных…"}
+            {status === "ready" &&
+              generatedAt &&
+              (stale
+                ? `Данные от ${formatGeneratedAt(generatedAt)} — устарели`
+                : `Данные от ${formatGeneratedAt(generatedAt)}`)}
+          </p>
         )}
       </div>
       {panelOpen && <DetailPanel detail={detail} onClose={closeDetail} />}
