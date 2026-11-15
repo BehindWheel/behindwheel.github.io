@@ -69,6 +69,9 @@ function createSignMarker({
   img.alt = "";
   body.appendChild(img);
   element.appendChild(body);
+  // The dot tier's hover tooltip: the object's name without the kind prefix —
+  // the dot color already tells the kind. The full label stays on aria-label.
+  element.dataset.tooltip = label.slice(label.indexOf(":") + 1).trim();
   // The low-zoom face (the mobile app's Circle tier): a plain colored dot
   // instead of the artwork, so a country-wide view carries every object
   // without a pile of signs. Same element, same click — the band logic just
