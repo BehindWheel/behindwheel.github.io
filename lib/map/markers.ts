@@ -47,14 +47,21 @@ type SignMarkerOptions = {
   // The accessible name: the marker element is a focusable button (WCAG
   // 2.1.1 — a click-only div is unreachable from the keyboard).
   label: string;
+  // Drives the dot skin's color (the low-zoom face) through data-kind.
+  kind: SelectionKind;
 };
 
-function createSignMarker({ icon, label }: SignMarkerOptions): maplibregl.Marker {
+function createSignMarker({
+  icon,
+  label,
+  kind,
+}: SignMarkerOptions): maplibregl.Marker {
   const element = document.createElement("div");
   element.className = "sign-marker";
   element.tabIndex = 0;
   element.setAttribute("role", "button");
   element.setAttribute("aria-label", label);
+  element.dataset.kind = kind;
   const body = document.createElement("span");
   body.className = "marker-body";
   const img = document.createElement("img");
@@ -62,6 +69,13 @@ function createSignMarker({ icon, label }: SignMarkerOptions): maplibregl.Marker
   img.alt = "";
   body.appendChild(img);
   element.appendChild(body);
+  // The low-zoom face (the mobile app's Circle tier): a plain colored dot
+  // instead of the artwork, so a country-wide view carries every object
+  // without a pile of signs. Same element, same click — the band logic just
+  // swaps the skin through a class.
+  const dot = document.createElement("span");
+  dot.className = "marker-dot";
+  element.appendChild(dot);
   return new maplibregl.Marker({ element, anchor: "bottom" });
 }
 
@@ -122,6 +136,7 @@ export function createMarkerGroups(data: {
         createSignMarker({
           icon: ICONS.camera,
           label: `Стационарная камера: ${camera.name}`,
+          kind: "stationary",
         }).setLngLat([camera.point.lng, camera.point.lat]),
       ],
     ),
@@ -132,6 +147,7 @@ export function createMarkerGroups(data: {
           createSignMarker({
             icon: ICONS.mediumSpeed,
             label: `Участок средней скорости: ${camera.name}`,
+            kind: "mediumSpeed",
           }).setLngLat([at.lng, at.lat]),
         ),
     ),
@@ -147,6 +163,7 @@ export function createMarkerGroups(data: {
             createSignMarker({
               icon: ICONS.repairsPoint,
               label: `Ремонт дороги: ${repair.road}`,
+              kind: "repairs",
             }).setLngLat([repair.point!.lng, repair.point!.lat]),
           ];
         }
@@ -154,6 +171,7 @@ export function createMarkerGroups(data: {
           createSignMarker({
             icon: ICONS.repairsLine,
             label: `Ремонт дороги: ${repair.road}`,
+            kind: "repairs",
           }).setLngLat([at.lng, at.lat]),
         );
       },

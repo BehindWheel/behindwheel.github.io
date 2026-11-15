@@ -307,6 +307,9 @@ export default function MapScreen() {
                   }
                 />
                 Стационарные камеры
+                {/* The live object count — the same number the map badges
+                   break down by kind; hidden until the data lands. */}
+                {data && <span className="panel-row-count">{data.stationary.length}</span>}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img className="panel-row-icon" src="/icons/camera.svg" alt="" />
               </label>
@@ -319,6 +322,7 @@ export default function MapScreen() {
                   }
                 />
                 Средняя скорость
+                {data && <span className="panel-row-count">{data.mediumSpeed.length}</span>}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img className="panel-row-icon" src="/icons/medium-speed.svg" alt="" />
               </label>
@@ -331,6 +335,7 @@ export default function MapScreen() {
                   }
                 />
                 Ремонты дорог
+                {data && <span className="panel-row-count">{data.repairs.length}</span>}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img className="panel-row-icon" src="/icons/road-repairs-point.svg" alt="" />
               </label>
