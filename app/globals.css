@@ -118,6 +118,7 @@ div.map-container {
 }
 
 .map-container .maplibregl-ctrl.maplibregl-ctrl-group button {
+  position: relative;
   display: flex;
   width: 34px;
   height: 34px;
@@ -189,6 +190,45 @@ div.map-container {
   button.maplibregl-ctrl-geolocate:disabled
   .maplibregl-ctrl-icon {
   background-image: none;
+}
+
+/* Geolocation errors (denied permission, failed watch): the stock sheet swaps
+   in a sprite with the slash baked in, which our mask turns into the same
+   barely-visible leak. Kill it and draw the slash deliberately — full-strength
+   error color across the dimmed glyph, on the button's own layer so the icon's
+   opacity doesn't mute it. */
+.map-container
+  .maplibregl-ctrl.maplibregl-ctrl-group
+  button.maplibregl-ctrl-geolocate:is(
+    .maplibregl-ctrl-geolocate-active-error,
+    .maplibregl-ctrl-geolocate-background-error
+  )
+  .maplibregl-ctrl-icon {
+  background-image: none;
+}
+
+.map-container
+  .maplibregl-ctrl.maplibregl-ctrl-group
+  button.maplibregl-ctrl-geolocate:is(
+    .maplibregl-ctrl-geolocate-active-error,
+    .maplibregl-ctrl-geolocate-background-error
+  )::after {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  background-color: var(--error-text);
+  mask: linear-gradient(
+      45deg,
+      transparent calc(50% - 1.2px),
+      #000 calc(50% - 1.2px),
+      #000 calc(50% + 1.2px),
+      transparent calc(50% + 1.2px)
+    )
+    no-repeat center / contain;
 }
 
 /* the control cards stack with a breathing gap, at the same 12px inset as
