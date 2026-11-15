@@ -157,3 +157,20 @@
    dot tier — once every marker wore its colored dot, the badges only
    repeated what the map already showed, and the counts moved to the filter
    panel. The dot/skin styles below are all that stayed. */
+
+/* The overlay lines' hover tooltip (overlays.ts): one reused div over the
+   canvas container, parked at the cursor point. pointer-events none keeps
+   the chip transparent to the map's own mouse handling. */
+.map-tooltip {
+  position: absolute;
+  z-index: 10;
+  display: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  color: var(--foreground);
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+}

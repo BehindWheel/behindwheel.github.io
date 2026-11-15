@@ -46,7 +46,7 @@ function mediumSpeedCollection(items: MediumSpeedCamera[]): FeatureCollection<Li
         type: "Feature",
         id: camera.id,
         geometry: toLineGeometry(camera.points),
-        properties: { id: camera.id },
+        properties: { id: camera.id, name: camera.name },
       }),
     ),
   };
@@ -62,7 +62,7 @@ function repairsLineCollection(items: RoadRepair[]): FeatureCollection<LineStrin
               type: "Feature",
               id: repair.id,
               geometry: toLineGeometry(repair.points ?? []),
-              properties: { id: repair.id },
+              properties: { id: repair.id, name: repair.road },
             } satisfies Feature<LineString>,
           ]
         : [],
@@ -201,6 +201,35 @@ export function bindLayerSelection(
       canvas.style.cursor = "";
     });
   }
+
+  // The lines get the dot-tier markers' affordance: a hover tooltip naming
+  // the object. One reused div over the canvas container follows the cursor
+  // point — a maplibregl.Popup would drag in anchor machinery a name chip
+  // doesn't need. pointer-events: none keeps the chip click-transparent.
+  const tooltip = document.createElement("div");
+  tooltip.className = "map-tooltip";
+  tooltip.setAttribute("aria-hidden", "true");
+  tooltip.style.display = "none";
+  map.getCanvasContainer().appendChild(tooltip);
+  const showTooltip = (event: maplibregl.MapLayerMouseEvent): void => {
+    const name = event.features?.[0]?.properties?.name;
+    if (typeof name !== "string" || name === "") {
+      return;
+    }
+    tooltip.textContent = name;
+    tooltip.style.left = `${event.point.x + 14}px`;
+    tooltip.style.top = `${event.point.y + 14}px`;
+    tooltip.style.display = "block";
+  };
+  const hideTooltip = (): void => {
+    tooltip.style.display = "none";
+  };
+  map.on("mousemove", LAYER_IDS.mediumSpeedHit, showTooltip);
+  map.on("mouseleave", LAYER_IDS.mediumSpeedHit, hideTooltip);
+  map.on("mousemove", LAYER_IDS.repairsLinesHit, showTooltip);
+  map.on("mouseleave", LAYER_IDS.repairsLinesHit, hideTooltip);
+  // A drag under the cursor would leave the chip stranded mid-map.
+  map.on("movestart", hideTooltip);
 }
 
 export function setLayerVisibility(
