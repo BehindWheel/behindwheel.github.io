@@ -7,6 +7,7 @@ import DetailPanel, { type Detail } from "@/components/DetailPanel";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { loadCdnData, type CdnData } from "@/lib/cdn";
+import { loadToggles, saveToggles } from "@/lib/layerToggles";
 import { createMap, onStyleLoad } from "@/lib/map/createMap";
 import { markerSearch, parseMarkerParam } from "@/lib/routing";
 import { getTheme, onThemeChange, setTheme, type Theme } from "@/lib/theme";
@@ -80,11 +81,11 @@ export default function MapScreen() {
   // here on, and the overlay lines follow the toggles through them — the
   // ref survives the toggles effect below.
   const tiersRef = useRef<MarkerTiers | null>(null);
-  const [toggles, setToggles] = useState<LayerToggles>({
-    stationary: true,
-    mediumSpeed: true,
-    repairs: true,
-  });
+  // The saved toggles win on boot — an explicit choice, like the theme.
+  // This component is client-only (ssr: false), so localStorage is there.
+  const [toggles, setToggles] = useState<LayerToggles>(() =>
+    loadToggles(window.localStorage),
+  );
   // The ref twin drives the MarkerTiers construction inside loadData,
   // whose identity must stay stable (the map effect tears down on change).
   const togglesRef = useRef(toggles);
@@ -224,8 +225,10 @@ export default function MapScreen() {
   useEffect(() => {
     // The tier manager owns the sign display; the overlay lines follow the
     // toggles through it. The constructor already applies the current
-    // toggles, so only a real toggle change needs a re-run here.
+    // toggles, so only a real toggle change needs a re-run here. The choice
+    // also lands in localStorage, same as the theme and the banner.
     togglesRef.current = toggles;
+    saveToggles(window.localStorage, toggles);
     tiersRef.current?.setToggles(toggles);
   }, [toggles]);
 
