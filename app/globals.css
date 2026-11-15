@@ -439,7 +439,7 @@ div.map-container {
   top: 64px;
   left: 12px;
   z-index: 10;
-  width: 248px;
+  width: 276px;
   overflow: hidden;
   color: var(--foreground);
   background: var(--panel-bg);
@@ -466,13 +466,24 @@ div.map-container {
   flex: none;
   width: 18px;
   height: 18px;
+}
+
+/* The live object count — the number the map badges break down by kind;
+   sits at the row's right edge next to the artwork. */
+.panel-row-count {
   margin-left: auto;
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }
 
 .panel-row {
   display: flex;
   gap: 10px;
   align-items: center;
+  /* One line per row: label, count, artwork — a wrap would break the
+     count's right-edge alignment. */
+  white-space: nowrap;
   min-height: 40px;
   padding: 0 14px;
   font-size: 13px;

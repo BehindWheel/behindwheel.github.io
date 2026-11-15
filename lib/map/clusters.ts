@@ -1,13 +1,14 @@
 // The zoom-band density control for the sign markers (issue #34): the map
-// drills down through three bands — a single Belarus badge at country zoom,
-// six oblast badges next, and from SIGN_MIN every sign shows. The overlay
-// lines come and go with the signs: an orphaned line fragment under a badge
-// reads as noise.
+// reads like the mobile app — colored dots at country zoom, six oblast
+// badges next as the drill-down affordance, and from SIGN_MIN the full
+// signs show, growing from their small to their large face at SIGN_LARGE.
+// No object ever disappears from the map: the badge bands carry every
+// marker as its colored dot, and the overlay lines show at every zoom.
 //
 // The experiment's middle band — supercluster bubbles — lost to "see
 // everything": at 266 points a 40px radius almost never caught a real
 // overlap, a bubble just hid two markers a screen apart. The dependency went
-// with it; what stayed is the progressive disclosure Belarus → oblast → signs.
+// with it; what stayed is the progressive disclosure dots → oblast → signs.
 //
 // Filters are respected in every band: badges count only the visible kinds,
 // and the line layers follow both the toggles and the band.
@@ -17,14 +18,14 @@ import type { CdnData } from "../cdn";
 import { regionName } from "../cdn";
 import { MARKER_KINDS, type MarkerGroups, type SelectionKind } from "./markers";
 import { LAYER_IDS, setLayerVisibility } from "./overlays";
-import { BELARUS_BOUNDS } from "./style";
 
 // Band edges in GL zoom units. Below BELARUS_MAX the country badge wins; the
-// oblast band owns the middle; from SIGN_MIN every sign shows. Tuned against
-// the live map — at 8.5 the densest oblast (Grodno) spreads across the whole
-// viewport and reads fine.
+// oblast band owns the middle; from SIGN_MIN the full signs show, growing to
+// their large face at SIGN_LARGE (the mobile app's Circle → Small → Large
+// tiers).
 const BELARUS_MAX_ZOOM = 7.5;
 const SIGN_MIN_ZOOM = 8.5;
+const SIGN_LARGE_ZOOM = 11;
 
 export type LayerToggles = Record<SelectionKind, boolean>;
 
@@ -98,7 +99,6 @@ export class ClusterManager {
   private map: maplibregl.Map;
   private signs: SignEntry[];
   private toggles: LayerToggles;
-  private belarusBadge: Badge | null = null;
   private regionBadges: Map<string, Badge>;
 
   constructor(
@@ -134,10 +134,6 @@ export class ClusterManager {
     name: string,
     bucket: BadgeBucket,
     targetZoom: number,
-    // The country badge ignores the sign centroid — the dense west would
-    // drag it off-center. It anchors to the geographic center of the bounds
-    // the map fits at startup, so it sits dead-center on the first view.
-    centroidOverride?: [number, number],
   ): Badge {
     const element = document.createElement("div");
     element.className = "region-badge";
@@ -167,7 +163,7 @@ export class ClusterManager {
       kindsRow.append(kindLabel);
     }
     element.append(kindsRow);
-    const centroid: [number, number] = centroidOverride ?? [
+    const centroid: [number, number] = [
       bucket.lngs.reduce((a, b) => a + b, 0) / bucket.lngs.length,
       bucket.lats.reduce((a, b) => a + b, 0) / bucket.lats.length,
     ];
@@ -204,41 +200,24 @@ export class ClusterManager {
     kindIds.add(entry.id);
   }
 
-  // The badges: one for the whole country (the Belarus band), one per oblast
-  // with any visible object (the region band). Both come from the visible
-  // signs' coordinates, so a fully filtered-out region simply has no badge.
+  // The oblast badges: one per oblast with any visible object (the region
+  // band). They come from the visible signs' coordinates, so a fully
+  // filtered-out region simply has no badge.
   private rebuildBadges(): void {
     for (const { marker } of this.regionBadges.values()) {
       marker.remove();
     }
-    if (this.belarusBadge) {
-      this.belarusBadge.marker.remove();
-    }
     this.regionBadges = new Map();
-    this.belarusBadge = null;
 
-    const whole: BadgeBucket = { lats: [], lngs: [], ids: new Set(), kinds: new Map() };
     const buckets = new Map<string, BadgeBucket>();
     for (const entry of this.signs) {
       if (!this.visible(entry) || !entry.region) continue;
-      ClusterManager.addTo(whole, entry);
       let bucket = buckets.get(entry.region);
       if (!bucket) {
         bucket = { lats: [], lngs: [], ids: new Set(), kinds: new Map() };
         buckets.set(entry.region, bucket);
       }
       ClusterManager.addTo(bucket, entry);
-    }
-    if (whole.ids.size > 0) {
-      this.belarusBadge = this.createBadge(
-        "Беларусь",
-        whole,
-        BELARUS_MAX_ZOOM + 0.5,
-        [
-          (BELARUS_BOUNDS[0][0] + BELARUS_BOUNDS[1][0]) / 2,
-          (BELARUS_BOUNDS[0][1] + BELARUS_BOUNDS[1][1]) / 2,
-        ],
-      );
     }
     for (const [region, bucket] of buckets) {
       this.regionBadges.set(
@@ -251,10 +230,15 @@ export class ClusterManager {
   private update = (): void => {
     const zoom = this.map.getZoom();
     const band =
-      zoom < BELARUS_MAX_ZOOM ? "belarus" : zoom < SIGN_MIN_ZOOM ? "region" : "signs";
+      zoom < BELARUS_MAX_ZOOM ? "dots" : zoom < SIGN_MIN_ZOOM ? "region" : "signs";
     const signsOn = band === "signs";
+    // The mobile app's marker tiers: below the sign band every object wears
+    // its colored dot — the map never goes empty under the badges — and the
+    // sign band starts with the small face, growing to large at SIGN_LARGE.
     for (const entry of this.signs) {
-      this.setSignVisible(entry, signsOn && this.visible(entry));
+      this.setSignVisible(entry, this.visible(entry));
+      entry.element.classList.toggle("dot-mode", !signsOn);
+      entry.element.classList.toggle("small-mode", signsOn && zoom < SIGN_LARGE_ZOOM);
     }
     // The overlay lines show at every zoom — they are the geography of the
     // events and give the badge bands their context. Only the filter
@@ -264,11 +248,6 @@ export class ClusterManager {
       for (const layerId of layerIds) {
         setLayerVisibility(this.map, layerId, on);
       }
-    }
-    if (this.belarusBadge) {
-      this.belarusBadge.marker
-        .getElement()
-        .classList.toggle("is-hidden", band !== "belarus");
     }
     for (const { marker } of this.regionBadges.values()) {
       marker.getElement().classList.toggle("is-hidden", band !== "region");
@@ -290,9 +269,6 @@ export class ClusterManager {
     for (const { marker } of this.regionBadges.values()) {
       marker.addTo(this.map);
     }
-    if (this.belarusBadge) {
-      this.belarusBadge.marker.addTo(this.map);
-    }
     this.update();
   }
 
@@ -300,14 +276,12 @@ export class ClusterManager {
   remove(): void {
     this.map.off("moveend", this.update);
     this.map.off("zoomend", this.update);
-    if (this.belarusBadge) {
-      this.belarusBadge.marker.remove();
-    }
     for (const { marker } of this.regionBadges.values()) {
       marker.remove();
     }
     for (const entry of this.signs) {
       this.setSignVisible(entry, this.visible(entry));
+      entry.element.classList.remove("dot-mode", "small-mode");
     }
   }
 

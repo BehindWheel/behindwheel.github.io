@@ -39,6 +39,56 @@
   width: 18px;
   height: 20px;
   display: block;
+  /* The small face (the mobile app's Small tier): the sign grows from 14px
+     to its full 18px as the zoom passes SIGN_LARGE — a layout transition,
+     the one case where animating geometry is worth the repaint. */
+  transition: width 150ms ease, height 150ms ease;
+}
+
+.sign-marker.small-mode img {
+  width: 14px;
+  height: 16px;
+}
+
+/* The dot face (the mobile app's Circle tier): a plain colored circle per
+   kind instead of the artwork, so the badge bands still carry every object.
+   Camera reads the ink token (dark on light, light on dark); the other two
+   reuse their line colors — a dot always matches the line it belongs to. */
+.marker-dot {
+  display: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 2px solid rgb(255 255 255 / 0.9);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+  /* Anchor is bottom (the sign's tip sits on its point) — raise the circle
+     so its center matches the sign's visual center, or the dot-to-sign
+     switch reads as a jump down. */
+  transform: translateY(-4px);
+}
+
+.sign-marker.dot-mode .marker-dot {
+  display: block;
+}
+
+.sign-marker.dot-mode .marker-body {
+  display: none;
+}
+
+.sign-marker[data-kind="stationary"] .marker-dot {
+  background: var(--foreground, #18181b);
+}
+
+.sign-marker[data-kind="mediumSpeed"] .marker-dot {
+  background: #d97b1f;
+}
+
+.sign-marker[data-kind="repairs"] .marker-dot {
+  background: #8c1a15;
+}
+
+:root[data-theme="dark"] .sign-marker[data-kind="repairs"] .marker-dot {
+  background: #e8604f;
 }
 
 /* The region badge (issue #34): two lines, both centered — the name on top,
