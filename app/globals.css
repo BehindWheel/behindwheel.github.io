@@ -1026,3 +1026,26 @@ div.map-container {
 :root[data-theme="dark"] .not-found-link {
   color: #18181b;
 }
+
+/* The share control sits beside the close ✕ in the same quiet icon-button
+   skin — a 44px touch target, the glyph in muted ink that darkens on tap. */
+.detail-actions {
+  display: flex;
+  align-items: center;
+}
+
+.detail-share {
+  display: block;
+  min-width: 44px;
+  min-height: 44px;
+  margin: -8px 0 -8px -8px;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.detail-share:hover {
+  color: var(--foreground);
+}
