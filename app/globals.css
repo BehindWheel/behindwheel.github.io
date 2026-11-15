@@ -41,6 +41,10 @@ html,
 body {
   height: 100%;
   overflow: hidden;
+  /* Themed ground color: before React mounts the page is bare body —
+     without this the dark scheme flashes white for the hydration gap. The
+     values match the map placeholders below. */
+  background: #eee9e2;
   color: var(--foreground);
   /* the dashboard's tap-highlight kill: Android paints a square blue flash
      over round buttons on tap — the highlight inherits everywhere from here */
@@ -104,6 +108,10 @@ div.map-container {
 }
 
 :root[data-theme="dark"] div.map-container {
+  background: rgb(42, 45, 52);
+}
+
+:root[data-theme="dark"] body {
   background: rgb(42, 45, 52);
 }
 
