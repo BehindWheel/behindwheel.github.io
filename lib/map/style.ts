@@ -4,11 +4,15 @@ export const BELARUS_BOUNDS: [[number, number], [number, number]] = [
 ];
 
 // The basemap follows the color scheme like every themed surface: Liberty in
-// light, OpenFreeMap's Dark in dark — the pitch-black rgb(12,12,12) style.
+// light, a self-hosted copy of OpenFreeMap's Dark in dark. The stock dark
+// style is pitch-black (rgb(12,12,12) background) and read too heavy; the
+// copy lifts every color's lightness ~1.5x — same OpenMapTiles source, same
+// glyphs and sprite, only the palette softened.
 // Fiord (#45516E) and Positron (light gray) were the softer candidates, the
-// black one won the call.
+// black one won the call — this softened fork keeps the call but dials the
+// black down.
 export const LIGHT_MAP_STYLE = "https://tiles.openfreemap.org/styles/liberty";
-export const DARK_MAP_STYLE = "https://tiles.openfreemap.org/styles/dark";
+export const DARK_MAP_STYLE = "/styles/dark-soft.json";
 
 // The dashboard colors, one step darker than their sign markers so the lines
 // separate from Liberty's roads: medium-speed sections take the amber of
