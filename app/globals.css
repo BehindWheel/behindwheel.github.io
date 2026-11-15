@@ -800,9 +800,27 @@ div.map-container {
   margin-bottom: 8px;
 }
 
+/* The kind icon + title read as one line: the icon is the same artwork the
+   filter panel and the markers use, so the event type lands before the eye
+   finishes reading the title. min-width lets a long road name truncate
+   instead of pushing the ✕ off the panel. */
+.detail-heading {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+}
+
+.detail-kind-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
 .detail-title {
   font-size: 18px;
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .detail-close {

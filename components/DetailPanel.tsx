@@ -59,6 +59,16 @@ function Row({ label, value }: { label: string; value: ReactNode }) {
   );
 }
 
+// The kind badge in the header reuses the same artwork files as the filter
+// panel and the map markers — the icon matches what was tapped, so the type
+// reads without parsing the title. The artwork carries no text, so the
+// screen reader gets the kind's name alongside.
+const KIND_META: Record<Detail["kind"], { icon: string; name: string }> = {
+  stationary: { icon: "/icons/camera.svg", name: "Стационарная камера" },
+  mediumSpeed: { icon: "/icons/medium-speed.svg", name: "Средняя скорость" },
+  repairs: { icon: "/icons/road-repairs-point.svg", name: "Ремонт дороги" },
+};
+
 function detailRows(detail: Detail) {
   if (detail.kind === "stationary") {
     const camera = detail.camera;
@@ -241,14 +251,27 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
           aria-hidden="true"
         />
         <div className="detail-header">
-          {/* On the not-found face the empty state below says it all — the
-             title stays only for the screen-reader dialog label. */}
-          <h2
-            className={`detail-title${detail ? "" : " sr-only"}`}
-            id="detail-title"
-          >
-            {title}
-          </h2>
+          <div className="detail-heading">
+            {detail && (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  className="detail-kind-icon"
+                  src={KIND_META[detail.kind].icon}
+                  alt=""
+                />
+                <span className="sr-only">{KIND_META[detail.kind].name}</span>
+              </>
+            )}
+            {/* On the not-found face the empty state below says it all — the
+               title stays only for the screen-reader dialog label. */}
+            <h2
+              className={`detail-title${detail ? "" : " sr-only"}`}
+              id="detail-title"
+            >
+              {title}
+            </h2>
+          </div>
           {/* The not-found face has its own Понятно action — a second close
              control in the header would be redundant. */}
           {detail && (
