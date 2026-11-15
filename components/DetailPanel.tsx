@@ -117,6 +117,31 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
   const [closing, setClosing] = useState(false);
   const requestClose = useCallback(() => setClosing(true), []);
 
+  // One-time swipe hint: on the first sheet open on mobile the drag handle
+  // bounces twice after landing — the only affordance for the swipe-down
+  // close. Remembered in localStorage like every other one-shot flag.
+  const [hint, setHint] = useState(() => {
+    if (typeof window === "undefined" || window.matchMedia("(min-width: 768px)").matches) {
+      return false;
+    }
+    try {
+      if (localStorage.getItem("swipe-hint") !== null) {
+        return false;
+      }
+      localStorage.setItem("swipe-hint", "1");
+    } catch {
+      return false;
+    }
+    return true;
+  });
+  useEffect(() => {
+    if (!hint) {
+      return;
+    }
+    const timer = setTimeout(() => setHint(false), 3000);
+    return () => clearTimeout(timer);
+  }, [hint]);
+
   useEffect(() => {
     if (!closing) {
       return;
@@ -211,7 +236,10 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        <div className="drag-handle" aria-hidden="true" />
+        <div
+          className={`drag-handle${hint ? " drag-handle-hint" : ""}`}
+          aria-hidden="true"
+        />
         <div className="detail-header">
           {/* On the not-found face the empty state below says it all — the
              title stays only for the screen-reader dialog label. */}
