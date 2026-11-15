@@ -14,10 +14,10 @@ import {
   addMarkerGroups,
   bindMarkerSelections,
   createMarkerGroups,
-  setMarkersVisibility,
   type MarkerGroups,
   type SelectionKind,
 } from "@/lib/map/markers";
+import { ClusterManager, type LayerToggles } from "@/lib/map/clusters";
 import {
   applyOverlays,
   bindLayerSelection,
@@ -25,11 +25,6 @@ import {
   setLayerVisibility,
 } from "@/lib/map/overlays";
 
-type LayerToggles = {
-  stationary: boolean;
-  mediumSpeed: boolean;
-  repairs: boolean;
-};
 
 export type SelectedFeature = {
   // "unknown" arrives from a ?marker= link whose kind doesn't parse —
@@ -92,11 +87,17 @@ export default function MapScreen() {
   const mapRef = useRef<maplibregl.Map | null>(null);
   const dataRef = useRef<CdnData | null>(null);
   const markersRef = useRef<MarkerGroups | null>(null);
+  // The density bands (region badges / supercluster / plain signs) own the
+  // sign display from here on — the ref survives the toggles effect below.
+  const clustersRef = useRef<ClusterManager | null>(null);
   const [toggles, setToggles] = useState<LayerToggles>({
     stationary: true,
     mediumSpeed: true,
     repairs: true,
   });
+  // The ref twin drives the ClusterManager construction inside loadData,
+  // whose identity must stay stable (the map effect tears down on change).
+  const togglesRef = useRef(toggles);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
@@ -146,6 +147,10 @@ export default function MapScreen() {
         markersRef.current = createMarkerGroups(data);
         addMarkerGroups(map, markersRef.current);
         bindMarkerSelections(markersRef.current, selectFeature);
+        // The band logic takes over sign visibility right away — its
+        // constructor runs the first update for the current view.
+        clustersRef.current?.remove();
+        clustersRef.current = new ClusterManager(map, markersRef.current, data, togglesRef.current);
       }
       applyOverlays(map, data);
       bindLayerSelection(map, selectFeature);
@@ -156,6 +161,9 @@ export default function MapScreen() {
       const id = parseMarkerParam(window.location.search);
       if (id) {
         setSelected({ kind: resolveKind(data, id) ?? "unknown", id });
+        // The sign may sit under a region badge or a bubble at the landing
+        // zoom — fly into the detail band so the marker itself is visible.
+        clustersRef.current?.flyToSign(id);
       }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : String(error));
@@ -187,6 +195,8 @@ export default function MapScreen() {
       map.once("load", load);
     }
     return () => {
+      clustersRef.current?.remove();
+      clustersRef.current = null;
       map.remove();
       mapRef.current = null;
       dataRef.current = null;
@@ -197,16 +207,18 @@ export default function MapScreen() {
 
   useEffect(() => {
     const map = mapRef.current;
-    const groups = markersRef.current;
     if (!map) {
       return;
     }
+    // The GL overlay lines keep their own visibility; the sign markers'
+    // display belongs to the density bands now.
     for (const key of ["stationary", "mediumSpeed", "repairs"] as const) {
       for (const layerId of LAYER_TO_LAYERS[key]) {
         setLayerVisibility(map, layerId, toggles[key]);
       }
-      setMarkersVisibility(groups?.[key].markers ?? [], toggles[key]);
     }
+    togglesRef.current = toggles;
+    clustersRef.current?.setToggles(toggles);
   }, [toggles, status]);
 
   // The filters popover closes on outside interaction and Escape (the popover
