@@ -221,14 +221,18 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
           >
             {title}
           </h2>
-          <button
-            type="button"
-            className="detail-close"
-            onClick={requestClose}
-            aria-label="Закрыть"
-          >
-            ✕
-          </button>
+          {/* The not-found face has its own Понятно action — a second close
+             control in the header would be redundant. */}
+          {detail && (
+            <button
+              type="button"
+              className="detail-close"
+              onClick={requestClose}
+              aria-label="Закрыть"
+            >
+              ✕
+            </button>
+          )}
         </div>
         <div className="detail-rows">
           {detail ? (
