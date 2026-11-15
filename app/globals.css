@@ -169,6 +169,17 @@ div.map-container {
     no-repeat center / contain;
 }
 
+/* The stock sheet dims a disabled control's glyph to 0.25 opacity — with
+   geolocation denied or unavailable the white ⌖ all but vanishes against the
+   dark basemap. Half strength still reads as inactive but stays visible. */
+:root[data-theme="dark"]
+  .map-container
+  .maplibregl-ctrl
+  button:disabled
+  .maplibregl-ctrl-icon {
+  opacity: 0.5;
+}
+
 /* the control cards stack with a breathing gap, at the same 12px inset as
    the filter button's corner (the ⓘ attribution rides the same container) */
 .map-container .maplibregl-ctrl-bottom-right {
