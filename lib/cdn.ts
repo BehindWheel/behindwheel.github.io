@@ -82,8 +82,27 @@ export type CdnData = {
   repairs: RoadRepair[];
 };
 
+// A CDN that never answers would otherwise leave the map on its loading
+// face forever — no error, no retry. 15s is generous for three ~25KB files;
+// past that the error state with its retry button beats a silent spinner.
+const FETCH_TIMEOUT_MS = 15_000;
+
+// AbortSignal.timeout rejects with a DOMException whose English message
+// would sit next to Russian UI text on the error face — reword it.
+function toFetchError(url: string, error: unknown): Error {
+  if (error instanceof DOMException && error.name === "TimeoutError") {
+    return new Error(`${url}: таймаут ${FETCH_TIMEOUT_MS / 1000} с`);
+  }
+  return error instanceof Error ? error : new Error(String(error));
+}
+
 async function fetchJson<T>(url: string): Promise<T> {
-  const res = await fetch(url);
+  let res: Response;
+  try {
+    res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+  } catch (error) {
+    throw toFetchError(url, error);
+  }
   if (!res.ok) {
     throw new Error(`${url}: HTTP ${res.status}`);
   }
