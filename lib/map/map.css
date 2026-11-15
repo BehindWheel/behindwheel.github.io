@@ -51,9 +51,10 @@
 }
 
 /* The dot face (the mobile app's Circle tier): a plain colored circle per
-   kind instead of the artwork, so the badge bands still carry every object.
-   Camera reads the ink token (dark on light, light on dark); the other two
-   reuse their line colors — a dot always matches the line it belongs to. */
+   kind instead of the artwork, so the zoomed-out tiers still carry every
+   object. Camera reads the ink token (dark on light, light on dark); the
+   other two reuse their line colors — a dot always matches the line it
+   belongs to. */
 .marker-dot {
   display: none;
   width: 12px;
@@ -91,60 +92,7 @@
   background: #e8604f;
 }
 
-/* The region badge (issue #34): two lines, both centered — the name on top,
-   the per-kind breakdown under it. The same artwork the filter panel and the
-   detail header use, so the composition reads in icons. Deliberately quieter
-   than the filter panel: translucent surface, small type — it must not fight
-   the basemap's own labels. Same surface tokens in both schemes. */
-.region-badge {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  align-items: center;
-  padding: 5px 12px 6px;
-  border: 1px solid var(--panel-border, #d4d4d8);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--panel-bg, rgba(255, 255, 255, 0.92)) 82%, transparent);
-  color: var(--foreground, #18181b);
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-  box-shadow: 0 1px 6px rgb(0 0 0 / 0.14);
-  backdrop-filter: blur(4px);
-  transition: opacity 150ms ease;
-}
-
-.region-badge.is-hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.region-badge:focus-visible {
-  outline: 2px solid var(--accent-text, #2563eb);
-  outline-offset: 2px;
-}
-
-.region-badge-kinds {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-/* The per-kind breakdown: the same artwork the filter panel and the detail
-   header use — the oblast's composition reads in icons, no text parsing. */
-.region-badge-kind {
-  display: flex;
-  gap: 3px;
-  align-items: center;
-  color: var(--muted, #52525b);
-  font-size: 11px;
-  font-weight: 500;
-}
-
-.region-badge-kind img {
-  width: 14px;
-  height: 14px;
-  display: block;
-}
+/* The region badges of the experiment's drill-down stage went away with the
+   dot tier — once every marker wore its colored dot, the badges only
+   repeated what the map already showed, and the counts moved to the filter
+   panel. The dot/skin styles below are all that stayed. */
