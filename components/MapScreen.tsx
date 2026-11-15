@@ -54,8 +54,8 @@ function findDetail(data: CdnData, selected: SelectedFeature): Detail | null {
 
 const LAYER_TO_LAYERS: Record<keyof LayerToggles, string[]> = {
   stationary: [],
-  mediumSpeed: [LAYER_IDS.mediumSpeed],
-  repairs: [LAYER_IDS.repairsLines],
+  mediumSpeed: [LAYER_IDS.mediumSpeed, LAYER_IDS.mediumSpeedHit],
+  repairs: [LAYER_IDS.repairsLines, LAYER_IDS.repairsLinesHit],
 };
 
 // The CDN timestamp is ISO UTC; the user reads it as a local date.

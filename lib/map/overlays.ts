@@ -17,9 +17,18 @@ import {
 export const LAYER_IDS = {
   mediumSpeed: "medium-speed-line",
   repairsLines: "repairs-line",
+  // Invisible fat targets over the visible lines — clicks land on these, the
+  // dashboard overlays.js rule.
+  mediumSpeedHit: "medium-speed-line-hit",
+  repairsLinesHit: "repairs-line-hit",
 } as const;
 
 const SOURCE_IDS = ["medium-speed", "repairs"] as const;
+
+// The visible stroke; three times its width at least 16 px is the finger
+// target — the hitbox carries the clicks, not the stroke.
+const LINE_WIDTH = 4;
+const HIT_LINE_WIDTH = 16;
 
 const toLineGeometry = (points: CdnPoint[]): LineString => ({
   type: "LineString",
@@ -86,8 +95,18 @@ export function applyOverlays(map: maplibregl.Map, data: CdnData): void {
       },
       paint: {
         "line-color": MEDIUM_SPEED_LINE_COLOR,
-        "line-width": 4,
+        "line-width": LINE_WIDTH,
         "line-opacity": 1,
+      },
+    });
+    map.addLayer({
+      id: LAYER_IDS.mediumSpeedHit,
+      type: "line",
+      source: "medium-speed",
+      paint: {
+        "line-color": "#000",
+        "line-width": HIT_LINE_WIDTH,
+        "line-opacity": 0,
       },
     });
   }
@@ -107,8 +126,18 @@ export function applyOverlays(map: maplibregl.Map, data: CdnData): void {
         // fresh each time the basemap swaps.
         "line-color":
           getTheme() === "dark" ? REPAIRS_LINE_DARK_COLOR : REPAIRS_LINE_COLOR,
-        "line-width": 4,
+        "line-width": LINE_WIDTH,
         "line-opacity": 1,
+      },
+    });
+    map.addLayer({
+      id: LAYER_IDS.repairsLinesHit,
+      type: "line",
+      source: "repairs",
+      paint: {
+        "line-color": "#000",
+        "line-width": HIT_LINE_WIDTH,
+        "line-opacity": 0,
       },
     });
   }
@@ -116,7 +145,9 @@ export function applyOverlays(map: maplibregl.Map, data: CdnData): void {
 
 // map.on() registers a listener and never dedupes, and bindLayerSelection is
 // re-run on every data load — so the handlers bind once per map. They read
-// the feature id from the click event, nothing is captured.
+// the feature id from the click event, nothing is captured. Click and cursor
+// both sit on the invisible hitbox layers — the visible stroke is 4 px, too
+// thin for a finger.
 const layerSelectionBound = new WeakSet<maplibregl.Map>();
 
 export function bindLayerSelection(
@@ -127,13 +158,13 @@ export function bindLayerSelection(
     return;
   }
   layerSelectionBound.add(map);
-  map.on("click", LAYER_IDS.mediumSpeed, (event) => {
+  map.on("click", LAYER_IDS.mediumSpeedHit, (event) => {
     const id = event.features?.[0]?.properties?.id as string | undefined;
     if (id !== undefined) {
       onSelect("mediumSpeed", id);
     }
   });
-  map.on("click", LAYER_IDS.repairsLines, (event) => {
+  map.on("click", LAYER_IDS.repairsLinesHit, (event) => {
     const id = event.features?.[0]?.properties?.id as string | undefined;
     if (id !== undefined) {
       onSelect("repairs", id);
@@ -144,7 +175,7 @@ export function bindLayerSelection(
   // lines live on the canvas, so the hover cursor goes through layer events
   // — same click targets as above.
   const canvas = map.getCanvas();
-  for (const layerId of [LAYER_IDS.mediumSpeed, LAYER_IDS.repairsLines]) {
+  for (const layerId of [LAYER_IDS.mediumSpeedHit, LAYER_IDS.repairsLinesHit]) {
     map.on("mouseenter", layerId, () => {
       canvas.style.cursor = "pointer";
     });
