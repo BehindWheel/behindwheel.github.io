@@ -32,6 +32,14 @@ export type MarkerGroups = {
 
 export type SelectionKind = "stationary" | "mediumSpeed" | "repairs";
 
+// The group walk order the density bands rely on (clusters.ts walks the
+// groups with this to build its flat sign registry).
+export const MARKER_KINDS: SelectionKind[] = [
+  "stationary",
+  "mediumSpeed",
+  "repairs",
+];
+
 export type SelectFeature = (kind: SelectionKind, id: string) => void;
 
 type SignMarkerOptions = {
@@ -168,13 +176,4 @@ export function bindMarkerSelections(
   bindGroupActivations(groups.stationary, "stationary", onSelect);
   bindGroupActivations(groups.mediumSpeed, "mediumSpeed", onSelect);
   bindGroupActivations(groups.repairs, "repairs", onSelect);
-}
-
-export function setMarkersVisibility(
-  markers: maplibregl.Marker[],
-  visible: boolean,
-): void {
-  for (const marker of markers) {
-    marker.getElement().style.display = visible ? "" : "none";
-  }
 }

@@ -30,3 +30,63 @@
   height: 20px;
   display: block;
 }
+
+/* The region badge (issue #34, the country band): a panel pill — name +
+   count — floating over its oblast's centroid. Same surface tokens as the
+   filter panel so it reads as UI over the basemap in both schemes. */
+.region-badge {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 12px;
+  border: 1px solid var(--panel-border, #d4d4d8);
+  border-radius: 999px;
+  background: var(--panel-bg, rgba(255, 255, 255, 0.92));
+  color: var(--foreground, #18181b);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.18);
+  backdrop-filter: blur(4px);
+}
+
+.region-badge:focus-visible {
+  outline: 2px solid var(--accent-text, #2563eb);
+  outline-offset: 2px;
+}
+
+.region-badge-count {
+  min-width: 22px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--accent-text, #2563eb);
+  color: #fff;
+  font-size: 12px;
+  text-align: center;
+}
+
+/* The supercluster bubble (the middle band): a compact count circle — the
+   same accent surface, deliberately rounder and smaller than the badge so
+   the two density levels read differently at a glance. */
+.cluster-bubble {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  border: 2px solid rgb(255 255 255 / 0.85);
+  border-radius: 999px;
+  background: var(--accent-text, #2563eb);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.25);
+}
+
+.cluster-bubble:focus-visible {
+  outline: 2px solid var(--accent-text, #2563eb);
+  outline-offset: 2px;
+}
