@@ -590,14 +590,18 @@ div.map-container {
   }
 }
 
-/* The not-found face: a compact centered empty state — icon, one line of
-   text, one action. The header carries the "Не найдено" title. */
+/* The not-found face: a centered empty state — icon, one line of text, one
+   action. The sheet takes the doctrine's 40vh bottom-sheet height and the
+   block centers itself in it, so the content doesn't pool at the bottom.
+   The header carries the "Не найдено" title (sr-only). */
 .detail-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 28px 16px 8px;
+  min-height: 40vh;
+  padding: 16px 16px max(32px, env(safe-area-inset-bottom));
   text-align: center;
 }
 
