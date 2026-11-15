@@ -213,7 +213,12 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
       >
         <div className="drag-handle" aria-hidden="true" />
         <div className="detail-header">
-          <h2 className="detail-title" id="detail-title">
+          {/* On the not-found face the empty state below says it all — the
+             title stays only for the screen-reader dialog label. */}
+          <h2
+            className={`detail-title${detail ? "" : " sr-only"}`}
+            id="detail-title"
+          >
             {title}
           </h2>
           <button
@@ -229,9 +234,36 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
           {detail ? (
             detailRows(detail)
           ) : (
-            <p className="detail-note">
-              Объект не найден — данные обновились или ссылка устарела.
-            </p>
+            // The stale-link face: a compact centered empty state. The
+            // header above already says "Не найдено"; the unlink glyph — the
+            // chain halves pulled apart — is a one-off inline svg in
+            // currentColor (the icon conventions).
+            <div className="detail-empty">
+              <svg
+                className="detail-empty-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="m3.5 16.5l3-3a2.83 2.83 0 0 1 4 4l-3 3a2.83 2.83 0 0 1-4-4" />
+                <path d="m20.5 7.5l-3 3a2.83 2.83 0 0 1-4-4l3-3a2.83 2.83 0 0 1 4 4" />
+                <path d="M9 9L7 7m8 8l2 2" />
+              </svg>
+              <p className="detail-empty-text">
+                Ссылка устарела: объект удален или перемещен.
+              </p>
+              <button
+                type="button"
+                className="detail-empty-close"
+                onClick={requestClose}
+              >
+                Понятно
+              </button>
+            </div>
           )}
         </div>
         {detail?.kind === "repairs" && detail.repair.note && (
