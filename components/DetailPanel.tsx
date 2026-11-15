@@ -243,20 +243,21 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
             // chain halves pulled apart — is a one-off inline svg in
             // currentColor (the icon conventions).
             <div className="detail-empty">
-              <svg
-                className="detail-empty-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="m3.5 16.5l3-3a2.83 2.83 0 0 1 4 4l-3 3a2.83 2.83 0 0 1-4-4" />
-                <path d="m20.5 7.5l-3 3a2.83 2.83 0 0 1-4-4l3-3a2.83 2.83 0 0 1 4 4" />
-                <path d="M9 9L7 7m8 8l2 2" />
-              </svg>
+              <div className="detail-empty-icon" aria-hidden="true">
+                <svg
+                  className="detail-empty-glyph"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m3.5 16.5l3-3a2.83 2.83 0 0 1 4 4l-3 3a2.83 2.83 0 0 1-4-4" />
+                  <path d="m20.5 7.5l-3 3a2.83 2.83 0 0 1-4-4l3-3a2.83 2.83 0 0 1 4 4" />
+                  <path d="M9 9L7 7m8 8l2 2" />
+                </svg>
+              </div>
               <p className="detail-empty-text">
                 Ссылка устарела: объект удален или перемещен.
               </p>
