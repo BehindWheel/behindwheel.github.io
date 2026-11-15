@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import dynamic from "next/dynamic";
 import { preconnect } from "react-dom";
 
@@ -25,5 +26,16 @@ export default function HomeClient() {
   // hints land in the first HTML; the calls dedupe, re-rendering is fine.
   preconnect("https://cdn-data.behindwheel.workers.dev", { crossOrigin: "anonymous" });
   preconnect("https://tiles.openfreemap.org", { crossOrigin: "anonymous" });
+
+  // The offline shell (public/sw.js), production only — the dev server's
+  // recompiles would fight a cache-first worker. Registration failures are
+  // silently non-fatal: the site works like before without the worker.
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "production" || !("serviceWorker" in navigator)) {
+      return;
+    }
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  }, []);
+
   return <MapScreen />;
 }

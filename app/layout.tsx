@@ -21,6 +21,7 @@ export const metadata: Metadata = {
   icons: {
     apple: "/apple-touch-icon.png",
   },
+  manifest: "/manifest.webmanifest",
   openGraph: {
     type: "website",
     locale: "ru_RU",

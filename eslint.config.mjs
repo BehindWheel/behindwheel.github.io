@@ -15,6 +15,9 @@ const eslintConfig = defineConfig([
     // the minified maplibre worker, copied into public/ by the prebuild script
     // (scripts/copy-maplibre-worker.mjs)
     "public/maplibre-gl-worker.mjs",
+    // the hand-written offline shell: browser-only globals (caches,
+    // clients) the app-target eslint config would flag
+    "public/sw.js",
   ]),
 ]);
 
