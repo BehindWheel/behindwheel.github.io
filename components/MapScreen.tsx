@@ -8,6 +8,7 @@ import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { loadCdnData, type CdnData } from "@/lib/cdn";
 import { createMap, onStyleLoad } from "@/lib/map/createMap";
+import { markerSearch, parseMarkerParam } from "@/lib/routing";
 import { getTheme, onThemeChange, setTheme, type Theme } from "@/lib/theme";
 import {
   addMarkerGroups,
@@ -31,7 +32,9 @@ type LayerToggles = {
 };
 
 export type SelectedFeature = {
-  kind: SelectionKind;
+  // "unknown" arrives from a ?marker= link whose kind doesn't parse —
+  // findDetail misses on it and the panel shows its not-found face.
+  kind: SelectionKind | "unknown";
   id: string;
 };
 
@@ -49,6 +52,8 @@ function findDetail(data: CdnData, selected: SelectedFeature): Detail | null {
       const repair = data.repairs.find((item) => item.id === selected.id);
       return repair ? { kind: "repairs", repair } : null;
     }
+    default:
+      return null;
   }
 }
 
@@ -97,9 +102,24 @@ export default function MapScreen() {
     dismissBanner(window.localStorage);
   }, []);
 
-  const selectFeature = useCallback((kind: SelectionKind, id: string) => {
-    setSelected({ kind, id });
+  // replaceState, not pushState: the panel isn't a navigation step, so Back
+  // keeps its plain meaning (leave the page) and the URL never stacks
+  // marker entries.
+  const updateUrl = useCallback((selected: SelectedFeature | null) => {
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}${markerSearch(selected)}`,
+    );
   }, []);
+
+  const selectFeature = useCallback(
+    (kind: SelectionKind, id: string) => {
+      setSelected({ kind, id });
+      updateUrl({ kind, id });
+    },
+    [updateUrl],
+  );
 
   const loadData = useCallback(async (map: maplibregl.Map) => {
     try {
@@ -115,6 +135,12 @@ export default function MapScreen() {
       bindLayerSelection(map, selectFeature);
       setGeneratedAt(data.generatedAt);
       setStatus("ready");
+      // A shared link's ?marker= opens the panel once the data exists to
+      // resolve it; an unresolvable id falls through to the not-found face.
+      const param = parseMarkerParam(window.location.search);
+      if (param) {
+        setSelected(param);
+      }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : String(error));
       setStatus("error");
@@ -211,7 +237,13 @@ export default function MapScreen() {
     setTheme(theme === "dark" ? "light" : "dark");
   }, [theme]);
 
-  const closeDetail = useCallback(() => setSelected(null), []);
+  const closeDetail = useCallback(() => {
+    setSelected(null);
+    updateUrl(null);
+  }, [updateUrl]);
+  // A selection with no matching detail is the ?marker= 404 — the panel is
+  // still open, it just shows its not-found face.
+  const panelOpen = selected !== null;
   const detail = useMemo(
     () => (data && selected ? findDetail(data, selected) : null),
     [data, selected],
@@ -223,7 +255,7 @@ export default function MapScreen() {
          MapLibre's default trackResize re-fits the canvas when it leaves. */}
       {!bannerDismissed && <AppBanner onClose={closeBanner} />}
       <div className="map-area">
-        <div ref={containerRef} className="map-container" inert={detail ? true : undefined} />
+        <div ref={containerRef} className="map-container" inert={panelOpen ? true : undefined} />
         <button
           type="button"
           className="filter-button"
@@ -247,7 +279,7 @@ export default function MapScreen() {
           />
         </button>
         {filtersOpen && (
-          <div className="panel" id="layer-panel" inert={detail ? true : undefined}>
+          <div className="panel" id="layer-panel" inert={panelOpen ? true : undefined}>
             <div className="panel-title">Слои карты</div>
             <div className="panel-group" role="group" aria-label="Слои карты">
               <label className="panel-row">
@@ -304,7 +336,7 @@ export default function MapScreen() {
           </div>
         )}
       </div>
-      {detail && <DetailPanel detail={detail} onClose={closeDetail} />}
+      {panelOpen && <DetailPanel detail={detail} onClose={closeDetail} />}
     </div>
   );
 }
