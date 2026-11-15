@@ -17,7 +17,7 @@ import {
   type MarkerGroups,
   type SelectionKind,
 } from "@/lib/map/markers";
-import { ClusterManager, type LayerToggles } from "@/lib/map/clusters";
+import { MarkerTiers, type LayerToggles } from "@/lib/map/marker-tiers";
 import { applyOverlays, bindLayerSelection } from "@/lib/map/overlays";
 
 
@@ -76,16 +76,16 @@ export default function MapScreen() {
   const mapRef = useRef<maplibregl.Map | null>(null);
   const dataRef = useRef<CdnData | null>(null);
   const markersRef = useRef<MarkerGroups | null>(null);
-  // The density bands (region badges at country zoom / plain signs above)
-  // own the sign AND line display from here on — the ref survives the
-  // toggles effect below.
-  const clustersRef = useRef<ClusterManager | null>(null);
+  // The marker tiers (dots → small → large signs) own the sign display from
+  // here on, and the overlay lines follow the toggles through them — the
+  // ref survives the toggles effect below.
+  const tiersRef = useRef<MarkerTiers | null>(null);
   const [toggles, setToggles] = useState<LayerToggles>({
     stationary: true,
     mediumSpeed: true,
     repairs: true,
   });
-  // The ref twin drives the ClusterManager construction inside loadData,
+  // The ref twin drives the MarkerTiers construction inside loadData,
   // whose identity must stay stable (the map effect tears down on change).
   const togglesRef = useRef(toggles);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -146,8 +146,8 @@ export default function MapScreen() {
         bindMarkerSelections(markersRef.current, selectFeature);
         // The band logic takes over sign visibility right away — its
         // constructor runs the first update for the current view.
-        clustersRef.current?.remove();
-        clustersRef.current = new ClusterManager(map, markersRef.current, data, togglesRef.current);
+        tiersRef.current?.remove();
+        tiersRef.current = new MarkerTiers(map, markersRef.current, data, togglesRef.current);
       }
       applyOverlays(map, data);
       bindLayerSelection(map, selectFeature);
@@ -160,7 +160,7 @@ export default function MapScreen() {
         setSelected({ kind: resolveKind(data, id) ?? "unknown", id });
         // The sign may sit under a region badge or a bubble at the landing
         // zoom — fly into the detail band so the marker itself is visible.
-        clustersRef.current?.flyToSign(id);
+        tiersRef.current?.flyToSign(id);
       }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : String(error));
@@ -192,8 +192,8 @@ export default function MapScreen() {
       map.once("load", load);
     }
     return () => {
-      clustersRef.current?.remove();
-      clustersRef.current = null;
+      tiersRef.current?.remove();
+      tiersRef.current = null;
       map.remove();
       mapRef.current = null;
       dataRef.current = null;
@@ -206,7 +206,7 @@ export default function MapScreen() {
     // The band manager owns both the sign display and the overlay lines'
     // visibility (toggles × zoom band) — nothing per-layer to set here.
     togglesRef.current = toggles;
-    clustersRef.current?.setToggles(toggles);
+    tiersRef.current?.setToggles(toggles);
   }, [toggles, status]);
 
   // The filters popover closes on outside interaction and Escape (the popover
@@ -216,8 +216,13 @@ export default function MapScreen() {
       return;
     }
     const onPointerDown = (event: PointerEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (target?.closest(".panel") || target?.closest(".filter-button")) {
+      const target = event.target;
+      // Synthetic events dispatched on document have no element target —
+      // nothing to check, nothing to close.
+      if (!(target instanceof Element)) {
+        return;
+      }
+      if (target.closest(".panel") || target.closest(".filter-button")) {
         return;
       }
       setFiltersOpen(false);
