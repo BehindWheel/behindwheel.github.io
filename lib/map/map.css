@@ -13,6 +13,16 @@
    .marker-body, 18x20, the maplibregl root anchored bottom. */
 .sign-marker {
   cursor: pointer;
+  /* The band switches ride opacity instead of display, so a zoom change
+     dissolves the layer rather than blinking it. visibility flips discretely
+     but only after the fade, and a hidden marker can't take focus. */
+  transition: opacity 150ms ease;
+}
+
+.sign-marker.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .sign-marker:focus-visible {
@@ -31,24 +41,32 @@
   display: block;
 }
 
-/* The region badge (issue #34, the country band): a panel pill — name +
-   count — floating over its oblast's centroid. Same surface tokens as the
-   filter panel so it reads as UI over the basemap in both schemes. */
+/* The region badge (issue #34, the country band): a light panel pill — name +
+   count — floating over its oblast's centroid. Deliberately quieter than the
+   filter panel: translucent surface, small type — it must not fight the
+   basemap's own oblast labels. Same surface tokens in both schemes. */
 .region-badge {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
-  padding: 6px 12px;
+  padding: 4px 10px;
   border: 1px solid var(--panel-border, #d4d4d8);
   border-radius: 999px;
-  background: var(--panel-bg, rgba(255, 255, 255, 0.92));
+  background: color-mix(in srgb, var(--panel-bg, rgba(255, 255, 255, 0.92)) 82%, transparent);
   color: var(--foreground, #18181b);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgb(0 0 0 / 0.18);
+  box-shadow: 0 1px 6px rgb(0 0 0 / 0.14);
   backdrop-filter: blur(4px);
+  transition: opacity 150ms ease;
+}
+
+.region-badge.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .region-badge:focus-visible {
@@ -56,37 +74,19 @@
   outline-offset: 2px;
 }
 
-.region-badge-count {
-  min-width: 22px;
-  padding: 1px 6px;
-  border-radius: 999px;
-  background: var(--accent-text, #2563eb);
-  color: #fff;
-  font-size: 12px;
-  text-align: center;
-}
-
-/* The supercluster bubble (the middle band): a compact count circle — the
-   same accent surface, deliberately rounder and smaller than the badge so
-   the two density levels read differently at a glance. */
-.cluster-bubble {
+/* The per-kind breakdown: the same artwork the filter panel and the detail
+   header use — the oblast's composition reads in icons, no text parsing. */
+.region-badge-kind {
   display: flex;
+  gap: 2px;
   align-items: center;
-  justify-content: center;
-  min-width: 30px;
-  height: 30px;
-  padding: 0 8px;
-  border: 2px solid rgb(255 255 255 / 0.85);
-  border-radius: 999px;
-  background: var(--accent-text, #2563eb);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgb(0 0 0 / 0.25);
+  color: var(--muted, #52525b);
+  font-size: 11px;
+  font-weight: 500;
 }
 
-.cluster-bubble:focus-visible {
-  outline: 2px solid var(--accent-text, #2563eb);
-  outline-offset: 2px;
+.region-badge-kind img {
+  width: 14px;
+  height: 14px;
+  display: block;
 }

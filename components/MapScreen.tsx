@@ -18,12 +18,7 @@ import {
   type SelectionKind,
 } from "@/lib/map/markers";
 import { ClusterManager, type LayerToggles } from "@/lib/map/clusters";
-import {
-  applyOverlays,
-  bindLayerSelection,
-  LAYER_IDS,
-  setLayerVisibility,
-} from "@/lib/map/overlays";
+import { applyOverlays, bindLayerSelection } from "@/lib/map/overlays";
 
 
 export type SelectedFeature = {
@@ -68,12 +63,6 @@ function resolveKind(data: CdnData, id: string): SelectionKind | null {
   return null;
 }
 
-const LAYER_TO_LAYERS: Record<keyof LayerToggles, string[]> = {
-  stationary: [],
-  mediumSpeed: [LAYER_IDS.mediumSpeed, LAYER_IDS.mediumSpeedHit],
-  repairs: [LAYER_IDS.repairsLines, LAYER_IDS.repairsLinesHit],
-};
-
 // The CDN timestamp is ISO UTC; the user reads it as a local date.
 function formatGeneratedAt(iso: string): string {
   return new Intl.DateTimeFormat("ru-RU", {
@@ -87,8 +76,9 @@ export default function MapScreen() {
   const mapRef = useRef<maplibregl.Map | null>(null);
   const dataRef = useRef<CdnData | null>(null);
   const markersRef = useRef<MarkerGroups | null>(null);
-  // The density bands (region badges / supercluster / plain signs) own the
-  // sign display from here on — the ref survives the toggles effect below.
+  // The density bands (region badges at country zoom / plain signs above)
+  // own the sign AND line display from here on — the ref survives the
+  // toggles effect below.
   const clustersRef = useRef<ClusterManager | null>(null);
   const [toggles, setToggles] = useState<LayerToggles>({
     stationary: true,
@@ -141,6 +131,13 @@ export default function MapScreen() {
   const loadData = useCallback(async (map: maplibregl.Map) => {
     try {
       const data = await loadCdnData();
+      // Re-check after the fetch: the map can be unmounted while the CDN
+      // round-trip is in flight (StrictMode double mount, fast navigation)
+      // and adding markers to a dead map still attaches elements to the
+      // live container — the double set of badges seen live.
+      if (mapRef.current !== map) {
+        return;
+      }
       dataRef.current = data;
       setData(data);
       if (!markersRef.current) {
@@ -206,17 +203,8 @@ export default function MapScreen() {
   }, [loadData]);
 
   useEffect(() => {
-    const map = mapRef.current;
-    if (!map) {
-      return;
-    }
-    // The GL overlay lines keep their own visibility; the sign markers'
-    // display belongs to the density bands now.
-    for (const key of ["stationary", "mediumSpeed", "repairs"] as const) {
-      for (const layerId of LAYER_TO_LAYERS[key]) {
-        setLayerVisibility(map, layerId, toggles[key]);
-      }
-    }
+    // The band manager owns both the sign display and the overlay lines'
+    // visibility (toggles × zoom band) — nothing per-layer to set here.
     togglesRef.current = toggles;
     clustersRef.current?.setToggles(toggles);
   }, [toggles, status]);
