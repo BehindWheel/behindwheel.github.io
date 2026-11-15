@@ -945,3 +945,49 @@ div.map-container {
 
 /* The map-marker skins live in lib/map/map.css — beside the marker builders,
    the same convention as the dashboard's ui/map/map.css. */
+
+/* The branded 404 (app/not-found.tsx): GitHub Pages serves this file for
+   every unmatched URL. A centered column on the themed body ground, in the
+   detail-empty-state's visual language — big quiet figure, one line, one
+   action button. */
+.not-found {
+  display: flex;
+  height: 100dvh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px;
+  text-align: center;
+}
+
+.not-found-code {
+  font-size: 64px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--muted);
+}
+
+.not-found-text {
+  max-width: 320px;
+  color: var(--foreground);
+}
+
+.not-found-link {
+  margin-top: 16px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 28px;
+  border-radius: 10px;
+  background: var(--accent-text);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+:root[data-theme="dark"] .not-found-link {
+  color: #18181b;
+}
