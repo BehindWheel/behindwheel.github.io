@@ -20,34 +20,22 @@ describe("REGIONS", () => {
   });
 });
 
-function sha256Hex(bytes: ArrayBuffer): Promise<string> {
-  return crypto.subtle.digest("SHA-256", bytes).then((digest) =>
-    Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join(
-      "",
-    ),
-  );
-}
-
 type Feature = { name: string; items: unknown[] };
 
-// A stubbed fetch serving a manifest plus feature bodies whose checksums are
-// real — loadCdnData must verify them with the actual crypto.subtle.
-async function stubCdn(features: Feature[], overrides: Record<string, string> = {}) {
+// A stubbed fetch serving a manifest plus the three feature files.
+async function stubCdn(features: Feature[]) {
   const bodies = new Map<string, string>();
   for (const feature of features) {
-    const body = JSON.stringify({ items: feature.items });
-    bodies.set(`/${feature.name}.json`, body);
+    bodies.set(`/${feature.name}.json`, JSON.stringify({ items: feature.items }));
   }
   const entries: CdnManifest["features"] = {};
   for (const feature of features) {
     entries[feature.name] = {
       version: 1,
       url: `/${feature.name}.json`,
-      sha256:
-        overrides[feature.name] ??
-        (await sha256Hex(
-          new TextEncoder().encode(bodies.get(`/${feature.name}.json`)!).buffer as ArrayBuffer,
-        )),
+      // The sha256 rides the envelope unchanged — it's the publisher's own
+      // change-detection key, not a served-bytes checksum (cdn.md).
+      sha256: "0".repeat(64),
       size: 0,
       count: feature.items.length,
     };
@@ -71,7 +59,7 @@ async function stubCdn(features: Feature[], overrides: Record<string, string> = 
 }
 
 describe("loadCdnData", () => {
-  it("loads and verifies the three feature files", async () => {
+  it("loads the three feature files", async () => {
     await stubCdn([
       { name: "stationary", items: [{ id: "s1", region: "grodno" }] },
       { name: "medium-speed", items: [] },
@@ -82,19 +70,6 @@ describe("loadCdnData", () => {
     expect(data.stationary).toHaveLength(1);
     expect(data.mediumSpeed).toEqual([]);
     expect(data.repairs).toEqual([]);
-    vi.unstubAllGlobals();
-  });
-
-  it("rejects a body whose checksum does not match", async () => {
-    await stubCdn(
-      [
-        { name: "stationary", items: [] },
-        { name: "medium-speed", items: [] },
-        { name: "repairs", items: [] },
-      ],
-      { repairs: "0".repeat(64) },
-    );
-    await expect(loadCdnData()).rejects.toThrow("контрольная сумма не совпала");
     vi.unstubAllGlobals();
   });
 
