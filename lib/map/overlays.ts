@@ -10,12 +10,18 @@ import type { CdnData, CdnPoint, MediumSpeedCamera, RoadRepair } from "../cdn";
 import type { SelectFeature } from "./markers";
 import {
   MEDIUM_SPEED_LINE_COLOR,
+  REPAIRS_CASE_COLOR,
+  REPAIRS_CASE_DARK_COLOR,
+  REPAIRS_CASE_WIDTH,
+  REPAIRS_DASHARRAY,
   REPAIRS_LINE_COLOR,
   REPAIRS_LINE_DARK_COLOR,
+  REPAIRS_WIDTH,
 } from "./style";
 
 export const LAYER_IDS = {
   mediumSpeed: "medium-speed-line",
+  repairsCase: "repairs-line-case",
   repairsLines: "repairs-line",
   // Invisible fat targets over the visible lines — clicks land on these, the
   // dashboard overlays.js rule.
@@ -112,12 +118,33 @@ export function applyOverlays(map: maplibregl.Map, data: CdnData): void {
   }
 
   if (!map.getLayer(LAYER_IDS.repairsLines)) {
+    // The roadwork read: a solid casing first, then the dashed stroke on
+    // top. The dasharray is in line-width units, and both layers' widths
+    // are fixed constants — the pattern stays constant screen-size at every
+    // zoom, no interpolation needed.
+    map.addLayer({
+      id: LAYER_IDS.repairsCase,
+      type: "line",
+      source: "repairs",
+      layout: {
+        "line-cap": "round",
+        "line-join": "round",
+      },
+      paint: {
+        "line-color":
+          getTheme() === "dark" ? REPAIRS_CASE_DARK_COLOR : REPAIRS_CASE_COLOR,
+        "line-width": REPAIRS_CASE_WIDTH,
+        "line-opacity": 1,
+      },
+    });
     map.addLayer({
       id: LAYER_IDS.repairsLines,
       type: "line",
       source: "repairs",
       layout: {
-        "line-cap": "round",
+        // Butt caps: a round cap bloats every dash into a pill — the casing
+        // below carries the rounded ends for the whole line.
+        "line-cap": "butt",
         "line-join": "round",
       },
       paint: {
@@ -126,7 +153,8 @@ export function applyOverlays(map: maplibregl.Map, data: CdnData): void {
         // fresh each time the basemap swaps.
         "line-color":
           getTheme() === "dark" ? REPAIRS_LINE_DARK_COLOR : REPAIRS_LINE_COLOR,
-        "line-width": LINE_WIDTH,
+        "line-width": REPAIRS_WIDTH,
+        "line-dasharray": REPAIRS_DASHARRAY,
         "line-opacity": 1,
       },
     });
