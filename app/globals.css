@@ -506,22 +506,57 @@ div.map-container {
   accent-color: #2563eb;
 }
 
-.panel-footer {
-  padding: 8px 14px;
-  border-top: 1px solid var(--panel-border);
-  font-size: 12px;
+/* The data status rides the map itself (MapScreen): the pill carries the
+   loading/freshness faces, the alert card carries the error with its retry.
+   Both wear the panel card skin — same tokens, smaller and rounder. */
+.data-pill {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 5;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
   color: var(--muted);
+  font-size: 12px;
 }
 
-.panel-error {
+/* A stalled feed reads as a warning, not as an error — the text just takes
+   the error color. */
+.data-pill-stale {
   color: var(--error-text);
 }
 
-.panel-error button {
+.map-error {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 5;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 0 auto;
+  max-width: 480px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
+  color: var(--error-text);
+  font-size: 13px;
+}
+
+.map-error button {
   border: none;
   background: none;
+  padding: 0;
   color: var(--accent-text);
   font: inherit;
+  font-weight: 600;
   text-decoration: underline;
   cursor: pointer;
 }
