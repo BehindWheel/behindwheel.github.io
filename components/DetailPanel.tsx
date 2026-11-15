@@ -138,8 +138,11 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
   useEffect(() => {
     // The dialog pattern (aria-patterns.md): focus moves into the panel on
     // open and returns to the trigger (the marker that was focused) on close.
+    // The focus lands on the panel container itself — a tabindex=-1 div —
+    // not on the close button: script focus on a button matches
+    // :focus-visible in Chrome, which painted the ring right after a tap.
     const opener = document.activeElement as HTMLElement | null;
-    panelRef.current?.querySelector("button")?.focus();
+    panelRef.current?.focus();
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         requestClose();
@@ -197,6 +200,7 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="detail-title"
+        tabIndex={-1}
         onAnimationEnd={onPanelAnimationEnd}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
