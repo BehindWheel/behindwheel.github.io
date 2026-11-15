@@ -26,14 +26,10 @@ export const REPAIRS_LINE_COLOR = "#8c1a15";
 // the dark scheme reads a lighter step of the same red; the amber holds.
 export const REPAIRS_LINE_DARK_COLOR = "#e8604f";
 
-// The repairs line wears the roadwork look: a solid casing beneath a dashed
-// stroke, a step thinner than the medium-speed lines so the red doesn't
-// outweigh the amber. The dash layer cuts butt caps — a round cap would
-// bloat every dash into a pill — so the dasharray is the literal geometry:
-// long dashes, a shorter gap. Widths are fixed constants, so the pattern is
-// constant screen-size at every zoom.
+// The repairs line wears the roadwork look: a thin dashed stroke, just the
+// red — no casing, per the user's call. The dash layer cuts butt caps (a
+// round cap would bloat every dash into a pill), so the dasharray is the
+// literal geometry: long dashes, a shorter gap. The width is a fixed
+// constant, so the pattern is constant screen-size at every zoom.
 export const REPAIRS_WIDTH = 2.5;
 export const REPAIRS_DASHARRAY: [number, number] = [3, 2];
-export const REPAIRS_CASE_WIDTH = 4.5;
-export const REPAIRS_CASE_COLOR = "rgba(255, 255, 255, 0.85)";
-export const REPAIRS_CASE_DARK_COLOR = "rgba(35, 47, 52, 0.9)";
