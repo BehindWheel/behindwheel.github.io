@@ -57,6 +57,22 @@ function findDetail(data: CdnData, selected: SelectedFeature): Detail | null {
   }
 }
 
+// Shared links carry no kind — ids are unique across the collections — so
+// the kind comes from wherever the id actually lives. null: stale id, the
+// panel shows its not-found face.
+function resolveKind(data: CdnData, id: string): SelectionKind | null {
+  if (data.stationary.some((item) => item.id === id)) {
+    return "stationary";
+  }
+  if (data.mediumSpeed.some((item) => item.id === id)) {
+    return "mediumSpeed";
+  }
+  if (data.repairs.some((item) => item.id === id)) {
+    return "repairs";
+  }
+  return null;
+}
+
 const LAYER_TO_LAYERS: Record<keyof LayerToggles, string[]> = {
   stationary: [],
   mediumSpeed: [LAYER_IDS.mediumSpeed, LAYER_IDS.mediumSpeedHit],
@@ -105,18 +121,18 @@ export default function MapScreen() {
   // replaceState, not pushState: the panel isn't a navigation step, so Back
   // keeps its plain meaning (leave the page) and the URL never stacks
   // marker entries.
-  const updateUrl = useCallback((selected: SelectedFeature | null) => {
+  const updateUrl = useCallback((id: string | null) => {
     window.history.replaceState(
       null,
       "",
-      `${window.location.pathname}${markerSearch(selected)}`,
+      `${window.location.pathname}${markerSearch(id)}`,
     );
   }, []);
 
   const selectFeature = useCallback(
     (kind: SelectionKind, id: string) => {
       setSelected({ kind, id });
-      updateUrl({ kind, id });
+      updateUrl(id);
     },
     [updateUrl],
   );
@@ -135,11 +151,11 @@ export default function MapScreen() {
       bindLayerSelection(map, selectFeature);
       setGeneratedAt(data.generatedAt);
       setStatus("ready");
-      // A shared link's ?marker= opens the panel once the data exists to
+      // A shared link's ?marker=<id> opens the panel once the data exists to
       // resolve it; an unresolvable id falls through to the not-found face.
-      const param = parseMarkerParam(window.location.search);
-      if (param) {
-        setSelected(param);
+      const id = parseMarkerParam(window.location.search);
+      if (id) {
+        setSelected({ kind: resolveKind(data, id) ?? "unknown", id });
       }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : String(error));
