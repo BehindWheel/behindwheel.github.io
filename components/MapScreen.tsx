@@ -144,10 +144,9 @@ export default function MapScreen() {
         markersRef.current = createMarkerGroups(data);
         addMarkerGroups(map, markersRef.current);
         bindMarkerSelections(markersRef.current, selectFeature);
-        // The band logic takes over sign visibility right away — its
+        // The tier logic takes over sign visibility right away — its
         // constructor runs the first update for the current view.
-        tiersRef.current?.remove();
-        tiersRef.current = new MarkerTiers(map, markersRef.current, data, togglesRef.current);
+        tiersRef.current = new MarkerTiers(map, markersRef.current, togglesRef.current);
       }
       applyOverlays(map, data);
       bindLayerSelection(map, selectFeature);
@@ -158,8 +157,8 @@ export default function MapScreen() {
       const id = parseMarkerParam(window.location.search);
       if (id) {
         setSelected({ kind: resolveKind(data, id) ?? "unknown", id });
-        // The sign may sit under a region badge or a bubble at the landing
-        // zoom — fly into the detail band so the marker itself is visible.
+        // The landing zoom may sit in the dot tier — fly into the sign tiers
+        // so the linked marker itself is visible.
         tiersRef.current?.flyToSign(id);
       }
     } catch (error) {
@@ -203,11 +202,12 @@ export default function MapScreen() {
   }, [loadData]);
 
   useEffect(() => {
-    // The band manager owns both the sign display and the overlay lines'
-    // visibility (toggles × zoom band) — nothing per-layer to set here.
+    // The tier manager owns the sign display; the overlay lines follow the
+    // toggles through it. The constructor already applies the current
+    // toggles, so only a real toggle change needs a re-run here.
     togglesRef.current = toggles;
     tiersRef.current?.setToggles(toggles);
-  }, [toggles, status]);
+  }, [toggles]);
 
   // The filters popover closes on outside interaction and Escape (the popover
   // pattern); pointerdown so the map under it still gets the full click.

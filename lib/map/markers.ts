@@ -32,8 +32,8 @@ export type MarkerGroups = {
 
 export type SelectionKind = "stationary" | "mediumSpeed" | "repairs";
 
-// The group walk order the density bands rely on (clusters.ts walks the
-// groups with this to build its flat sign registry).
+// The group walk order the tiers rely on (marker-tiers.ts walks the groups
+// with this to build its flat sign registry).
 export const MARKER_KINDS: SelectionKind[] = [
   "stationary",
   "mediumSpeed",
