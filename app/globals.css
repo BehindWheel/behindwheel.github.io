@@ -604,13 +604,15 @@ div.map-container {
   }
 
   /* The side panel is full height — the empty state centers in all of it,
-     not in the mobile sheet's 40vh strip. */
-  .detail-panel {
+     not in the mobile sheet's 40vh strip. Scoped to the not-found face: an
+     unconditional flex:1 on .detail-rows pushed the repair note to the very
+     bottom of the panel. */
+  .detail-panel:has(.detail-empty) {
     display: flex;
     flex-direction: column;
   }
 
-  .detail-rows {
+  .detail-panel:has(.detail-empty) .detail-rows {
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
