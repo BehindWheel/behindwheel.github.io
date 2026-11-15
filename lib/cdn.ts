@@ -109,6 +109,33 @@ async function fetchJson<T>(url: string): Promise<T> {
   return (await res.json()) as T;
 }
 
+// The manifest carries each feature file's sha256; verifying it catches a
+// truncated or corrupted upload before it renders as half a map. Needs a
+// secure context — behindwheel.github.io is https, and where crypto.subtle
+// is missing (plain-http previews) verification is skipped, not failed.
+async function fetchVerifiedJson<T>(url: string, expectedSha256: string): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+  } catch (error) {
+    throw toFetchError(url, error);
+  }
+  if (!res.ok) {
+    throw new Error(`${url}: HTTP ${res.status}`);
+  }
+  const bytes = await res.arrayBuffer();
+  if (typeof crypto !== "undefined" && crypto.subtle) {
+    const digest = await crypto.subtle.digest("SHA-256", bytes);
+    const actual = Array.from(new Uint8Array(digest), (byte) =>
+      byte.toString(16).padStart(2, "0"),
+    ).join("");
+    if (actual !== expectedSha256) {
+      throw new Error(`${url}: контрольная сумма не совпала`);
+    }
+  }
+  return JSON.parse(new TextDecoder().decode(bytes)) as T;
+}
+
 // The CDN sets max-age=0 + must-revalidate + ETag on every file, so plain
 // fetch() already revalidates: the browser sends If-None-Match and a 304
 // costs nothing. No manual ETag cache is needed on top of that.
@@ -119,17 +146,20 @@ export async function loadCdnData(): Promise<CdnData> {
     if (!entry) {
       throw new Error(`manifest.json: feature "${name}" is missing`);
     }
-    return `${CDN_BASE}${entry.url}`;
+    return { url: `${CDN_BASE}${entry.url}`, sha256: entry.sha256 };
   };
-  const [stationary, mediumSpeed, repairs] = await Promise.all([
-    fetchJson<{ items: StationaryCamera[] }>(featureUrl("stationary")),
-    fetchJson<{ items: MediumSpeedCamera[] }>(featureUrl("medium-speed")),
-    fetchJson<{ items: RoadRepair[] }>(featureUrl("repairs")),
+  const stationary = featureUrl("stationary");
+  const mediumSpeed = featureUrl("medium-speed");
+  const repairs = featureUrl("repairs");
+  const [stationaryData, mediumSpeedData, repairsData] = await Promise.all([
+    fetchVerifiedJson<{ items: StationaryCamera[] }>(stationary.url, stationary.sha256),
+    fetchVerifiedJson<{ items: MediumSpeedCamera[] }>(mediumSpeed.url, mediumSpeed.sha256),
+    fetchVerifiedJson<{ items: RoadRepair[] }>(repairs.url, repairs.sha256),
   ]);
   return {
     generatedAt: manifest.generatedAt,
-    stationary: stationary.items,
-    mediumSpeed: mediumSpeed.items,
-    repairs: repairs.items,
+    stationary: stationaryData.items,
+    mediumSpeed: mediumSpeedData.items,
+    repairs: repairsData.items,
   };
 }
