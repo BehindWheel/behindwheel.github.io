@@ -31,6 +31,7 @@ export type LayerToggles = Record<SelectionKind, boolean>;
 type SignEntry = {
   kind: SelectionKind;
   id: string;
+  region: string;
   element: HTMLElement;
   lngLat: [number, number];
   visible: boolean;
@@ -48,9 +49,13 @@ function collectSigns(groups: MarkerGroups): SignEntry[] {
   for (const kind of MARKER_KINDS) {
     for (const marker of groups[kind].markers) {
       const element = marker.getElement();
+      // The region rides the object, looked up by the id the builder
+      // stamped on the element — the registry keeps it for the filter.
+      const region = groups[kind].itemById.get(element.dataset.id ?? "")?.region ?? "";
       signs.push({
         kind,
         id: element.dataset.id ?? "",
+        region,
         element,
         lngLat: marker.getLngLat().toArray() as [number, number],
         visible: true,
@@ -64,6 +69,8 @@ export class MarkerTiers {
   private map: maplibregl.Map;
   private signs: SignEntry[];
   private toggles: LayerToggles;
+  // null — the whole country; a slug narrows the map to one oblast.
+  private region: string | null = null;
 
   constructor(
     map: maplibregl.Map,
@@ -99,7 +106,10 @@ export class MarkerTiers {
   };
 
   private visible(entry: SignEntry): boolean {
-    return this.toggles[entry.kind];
+    return (
+      this.toggles[entry.kind] &&
+      (this.region === null || entry.region === this.region)
+    );
   }
 
   private setSignVisible(entry: SignEntry, visible: boolean): void {
@@ -112,6 +122,14 @@ export class MarkerTiers {
   // Filters changed: re-run the tier logic for the current view.
   setToggles(toggles: LayerToggles): void {
     this.toggles = toggles;
+    this.update();
+  }
+
+  // The region filter changed: re-run the tier logic. The overlay lines
+  // don't go through here — their sources are rebuilt by applyOverlays,
+  // which reads the same region.
+  setRegion(region: string | null): void {
+    this.region = region;
     this.update();
   }
 

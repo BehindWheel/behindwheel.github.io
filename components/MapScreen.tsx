@@ -6,7 +6,7 @@ import { dismissBanner, isBannerDismissed, subscribeBannerDismissal } from "@/li
 import DetailPanel, { type Detail } from "@/components/DetailPanel";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { loadCdnData, type CdnData } from "@/lib/cdn";
+import { loadCdnData, REGIONS, type CdnData } from "@/lib/cdn";
 import { loadToggles, saveToggles } from "@/lib/layerToggles";
 import { createMap, onStyleLoad } from "@/lib/map/createMap";
 import { markerSearch, parseMarkerParam } from "@/lib/routing";
@@ -94,6 +94,11 @@ export default function MapScreen() {
   // The ref twin drives the MarkerTiers construction inside loadData,
   // whose identity must stay stable (the map effect tears down on change).
   const togglesRef = useRef(toggles);
+  // The region filter: null — the whole country, a slug — one oblast. The
+  // ref twin feeds the style-swap replay and the loadData path, both of
+  // which run outside the region effect below.
+  const [region, setRegion] = useState<string | null>(null);
+  const regionRef = useRef(region);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   // The freshness face of the pill: the pipeline's timestamp read against a
@@ -163,7 +168,7 @@ export default function MapScreen() {
           // constructor runs the first update for the current view.
           tiersRef.current = new MarkerTiers(map, markersRef.current, togglesRef.current);
         }
-        applyOverlays(map, data);
+        applyOverlays(map, data, regionRef.current);
         bindLayerSelection(map, selectFeature);
         setGeneratedAt(data.generatedAt);
         setStale(
@@ -212,10 +217,11 @@ export default function MapScreen() {
 
     // setStyle() wipes sources/layers, so overlays are replayed on top of the
     // new basemap; data refetch is unnecessary — the DOM markers survive.
+    // The replay carries the current region so the filter survives the swap.
     onStyleLoad(map, () => {
       const data = dataRef.current;
       if (data) {
-        applyOverlays(map, data);
+        applyOverlays(map, data, regionRef.current);
       }
     });
     if (map.isStyleLoaded()) {
@@ -243,6 +249,19 @@ export default function MapScreen() {
     saveToggles(window.localStorage, toggles);
     tiersRef.current?.setToggles(toggles);
   }, [toggles]);
+
+  useEffect(() => {
+    // The region filter reaches the markers through the tiers and the lines
+    // through a source rebuild — applyOverlays is idempotent, so a re-run
+    // just swaps the filtered collections in place.
+    regionRef.current = region;
+    tiersRef.current?.setRegion(region);
+    const map = mapRef.current;
+    const data = dataRef.current;
+    if (map && data) {
+      applyOverlays(map, data, region);
+    }
+  }, [region]);
 
   // The filters popover closes on outside interaction and Escape (the popover
   // pattern); pointerdown so the map under it still gets the full click.
@@ -394,6 +413,25 @@ export default function MapScreen() {
                 <img className="panel-row-icon" src="/icons/road-repairs-point.svg" alt="" />
               </label>
             </div>
+            {/* The region row: null ("") is the whole country; a slug narrows
+               the markers through the tiers and the lines through the source
+               rebuild. A native select — six options need no custom dropdown. */}
+            <label className="panel-region">
+              Область
+              <select
+                value={region ?? ""}
+                onChange={(event) =>
+                  setRegion(event.target.value === "" ? null : event.target.value)
+                }
+              >
+                <option value="">Вся Беларусь</option>
+                {REGIONS.map((item) => (
+                  <option key={item.slug} value={item.slug}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
         )}
         {/* The data status rides the map itself: the filters panel is closed
