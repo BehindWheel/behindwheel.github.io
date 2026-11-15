@@ -115,6 +115,14 @@
   background-image: url("/icons/road-repairs-point.svg");
 }
 
+.sign-marker.dot-mode:hover,
+.sign-marker.dot-mode:focus-visible {
+  /* Each maplibregl marker is its own stacking context — the tooltip's
+     z-index can't escape it, so the hovered marker itself rises above its
+     siblings or the chip renders behind the neighboring dots. */
+  z-index: 10;
+}
+
 .sign-marker.dot-mode:hover::after,
 .sign-marker.dot-mode:focus-visible::after {
   opacity: 1;
