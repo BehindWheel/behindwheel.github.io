@@ -10,6 +10,7 @@ import type {
   MediumSpeedCamera,
   RoadRepair,
   StationaryCamera,
+  TrafficCamera,
 } from "../cdn";
 
 const ICONS = {
@@ -17,6 +18,7 @@ const ICONS = {
   mediumSpeed: "/icons/medium-speed.svg",
   repairsPoint: "/icons/road-repairs-point.svg",
   repairsLine: "/icons/road-repairs.svg",
+  traffic: "/icons/traffic.svg",
 } as const;
 
 export type MarkerGroup<T extends { id: string }> = {
@@ -28,9 +30,10 @@ export type MarkerGroups = {
   stationary: MarkerGroup<StationaryCamera>;
   mediumSpeed: MarkerGroup<MediumSpeedCamera>;
   repairs: MarkerGroup<RoadRepair>;
+  traffic: MarkerGroup<TrafficCamera>;
 };
 
-export type SelectionKind = "stationary" | "mediumSpeed" | "repairs";
+export type SelectionKind = "stationary" | "mediumSpeed" | "repairs" | "traffic";
 
 // The group walk order the tiers rely on (marker-tiers.ts walks the groups
 // with this to build its flat sign registry).
@@ -38,6 +41,7 @@ export const MARKER_KINDS: SelectionKind[] = [
   "stationary",
   "mediumSpeed",
   "repairs",
+  "traffic",
 ];
 
 export type SelectFeature = (kind: SelectionKind, id: string) => void;
@@ -131,6 +135,7 @@ export function createMarkerGroups(data: {
   stationary: StationaryCamera[];
   mediumSpeed: MediumSpeedCamera[];
   repairs: RoadRepair[];
+  traffic: TrafficCamera[];
 }): MarkerGroups {
   return {
     stationary: buildGroup(
@@ -179,11 +184,21 @@ export function createMarkerGroups(data: {
         );
       },
     ),
+    traffic: buildGroup(
+      data.traffic.filter((sensor) => sensor.point),
+      (sensor) => [
+        createSignMarker({
+          icon: ICONS.traffic,
+          label: `Датчик мониторинга трафика: ${sensor.name}`,
+          kind: "traffic",
+        }).setLngLat([sensor.point.lng, sensor.point.lat]),
+      ],
+    ),
   };
 }
 
 export function addMarkerGroups(map: maplibregl.Map, groups: MarkerGroups): void {
-  for (const group of [groups.stationary, groups.mediumSpeed, groups.repairs]) {
+  for (const group of [groups.stationary, groups.mediumSpeed, groups.repairs, groups.traffic]) {
     for (const marker of group.markers) {
       marker.addTo(map);
     }
@@ -197,4 +212,5 @@ export function bindMarkerSelections(
   bindGroupActivations(groups.stationary, "stationary", onSelect);
   bindGroupActivations(groups.mediumSpeed, "mediumSpeed", onSelect);
   bindGroupActivations(groups.repairs, "repairs", onSelect);
+  bindGroupActivations(groups.traffic, "traffic", onSelect);
 }

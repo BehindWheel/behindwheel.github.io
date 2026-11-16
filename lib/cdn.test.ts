@@ -59,27 +59,33 @@ async function stubCdn(features: Feature[]) {
 }
 
 describe("loadCdnData", () => {
-  it("loads the three feature files", async () => {
+  it("loads the four feature files", async () => {
     await stubCdn([
       { name: "stationary", items: [{ id: "s1", region: "grodno" }] },
       { name: "medium-speed", items: [] },
       { name: "repairs", items: [] },
+      { name: "traffic", items: [{ id: "t1", region: "minsk" }] },
     ]);
     const data = await loadCdnData();
     expect(data.generatedAt).toBe("2026-11-15T17:00:21Z");
     expect(data.stationary).toHaveLength(1);
     expect(data.mediumSpeed).toEqual([]);
     expect(data.repairs).toEqual([]);
+    expect(data.traffic).toHaveLength(1);
     vi.unstubAllGlobals();
   });
 
-  it("reports a missing manifest feature", async () => {
+  it("leaves a feature the manifest doesn't carry empty", async () => {
     await stubCdn([
-      { name: "stationary", items: [] },
+      { name: "stationary", items: [{ id: "s1" }] },
       { name: "medium-speed", items: [] },
-      // "repairs" never lands in the manifest
+      { name: "traffic", items: [] },
+      // "repairs" never lands in the manifest — the publisher hasn't shipped
+      // it yet, so the map shows the layers it does have.
     ]);
-    await expect(loadCdnData()).rejects.toThrow('feature "repairs" is missing');
+    const data = await loadCdnData();
+    expect(data.stationary).toHaveLength(1);
+    expect(data.repairs).toEqual([]);
     vi.unstubAllGlobals();
   });
 });

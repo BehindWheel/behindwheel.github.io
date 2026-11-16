@@ -10,6 +10,7 @@ const data: CdnData = {
   ],
   mediumSpeed: [{ id: "m1", name: "М6 Минск — Гродно" }],
   repairs: [{ id: "r1", road: "ул. Победы", type: "point" }],
+  traffic: [{ id: "t1", name: "МКАД, 16 км" }],
 } as CdnData;
 
 describe("searchObjects", () => {
@@ -22,6 +23,12 @@ describe("searchObjects", () => {
   it("matches a repair by road", () => {
     expect(searchObjects(data, "Победы")).toEqual([
       { kind: "repairs", id: "r1", label: "ул. Победы" },
+    ]);
+  });
+
+  it("matches a traffic sensor by name", () => {
+    expect(searchObjects(data, "МКАД")).toEqual([
+      { kind: "traffic", id: "t1", label: "МКАД, 16 км" },
     ]);
   });
 

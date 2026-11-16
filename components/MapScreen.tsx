@@ -44,6 +44,10 @@ function findDetail(data: CdnData, selected: SelectedFeature): Detail | null {
       const repair = data.repairs.find((item) => item.id === selected.id);
       return repair ? { kind: "repairs", repair } : null;
     }
+    case "traffic": {
+      const sensor = data.traffic.find((item) => item.id === selected.id);
+      return sensor ? { kind: "traffic", sensor } : null;
+    }
     default:
       return null;
   }
@@ -61,6 +65,9 @@ function resolveKind(data: CdnData, id: string): SelectionKind | null {
   }
   if (data.repairs.some((item) => item.id === id)) {
     return "repairs";
+  }
+  if (data.traffic.some((item) => item.id === id)) {
+    return "traffic";
   }
   return null;
 }
@@ -84,6 +91,7 @@ const KIND_ICONS: Record<SelectionKind, string> = {
   stationary: "/icons/camera.svg",
   mediumSpeed: "/icons/medium-speed.svg",
   repairs: "/icons/road-repairs-point.svg",
+  traffic: "/icons/traffic.svg",
 };
 
 export default function MapScreen() {
@@ -469,6 +477,19 @@ export default function MapScreen() {
                 {data && <span className="panel-row-count">{data.repairs.length}</span>}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img className="panel-row-icon" src="/icons/road-repairs-point.svg" alt="" />
+              </label>
+              <label className="panel-row">
+                <input
+                  type="checkbox"
+                  checked={toggles.traffic}
+                  onChange={(event) =>
+                    setToggles((prev) => ({ ...prev, traffic: event.target.checked }))
+                  }
+                />
+                Мониторинг трафика
+                {data && <span className="panel-row-count">{data.traffic.length}</span>}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="panel-row-icon" src="/icons/traffic.svg" alt="" />
               </label>
             </div>
             {/* The region row: null ("") is the whole country; a slug narrows

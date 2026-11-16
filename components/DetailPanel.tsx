@@ -9,12 +9,18 @@ import {
   type TouchEvent,
 } from "react";
 import { regionName } from "@/lib/cdn";
-import type { MediumSpeedCamera, RoadRepair, StationaryCamera } from "@/lib/cdn";
+import type {
+  MediumSpeedCamera,
+  RoadRepair,
+  StationaryCamera,
+  TrafficCamera,
+} from "@/lib/cdn";
 
 export type Detail =
   | { kind: "stationary"; camera: StationaryCamera }
   | { kind: "mediumSpeed"; camera: MediumSpeedCamera }
-  | { kind: "repairs"; repair: RoadRepair };
+  | { kind: "repairs"; repair: RoadRepair }
+  | { kind: "traffic"; sensor: TrafficCamera };
 
 type DetailPanelProps = {
   // null — the ?marker= link points at an id the current data no longer
@@ -67,6 +73,7 @@ const KIND_META: Record<Detail["kind"], { icon: string; name: string }> = {
   stationary: { icon: "/icons/camera.svg", name: "Стационарная камера" },
   mediumSpeed: { icon: "/icons/medium-speed.svg", name: "Средняя скорость" },
   repairs: { icon: "/icons/road-repairs-point.svg", name: "Ремонт дороги" },
+  traffic: { icon: "/icons/traffic.svg", name: "Датчик мониторинга трафика" },
 };
 
 function detailRows(detail: Detail) {
@@ -95,6 +102,19 @@ function detailRows(detail: Detail) {
         />
         <Row label="Область" value={regionName(camera.region)} />
         <Row label="Обновлено" value={formatDate(camera.updateTime)} />
+      </>
+    );
+  }
+  if (detail.kind === "traffic") {
+    const sensor = detail.sensor;
+    return (
+      <>
+        <Row
+          label="Направление"
+          value={sensor.bidirectional ? "Двухсторонняя" : "Односторонняя"}
+        />
+        <Row label="Область" value={regionName(sensor.region)} />
+        <Row label="Обновлено" value={formatDate(sensor.updateTime)} />
       </>
     );
   }
@@ -172,7 +192,9 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
   const title = detail
     ? detail.kind === "repairs"
       ? detail.repair.road
-      : detail.camera.name
+      : detail.kind === "traffic"
+        ? detail.sensor.name
+        : detail.camera.name
     : "Не найдено";
 
   // Share: the selected marker already rides the URL as ?marker=<id>, but

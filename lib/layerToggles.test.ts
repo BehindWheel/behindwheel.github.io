@@ -20,6 +20,7 @@ describe("loadToggles", () => {
       stationary: true,
       mediumSpeed: true,
       repairs: true,
+      traffic: true,
     });
   });
 
@@ -33,6 +34,7 @@ describe("loadToggles", () => {
       stationary: true,
       mediumSpeed: false,
       repairs: false,
+      traffic: true,
     });
   });
 
@@ -42,6 +44,7 @@ describe("loadToggles", () => {
     const toggles = loadToggles(storage as unknown as Storage);
     expect(toggles.repairs).toBe(false);
     expect(toggles.stationary).toBe(true);
+    expect(toggles.traffic).toBe(true);
   });
 
   it("falls back to defaults on malformed JSON", () => {
@@ -51,6 +54,7 @@ describe("loadToggles", () => {
       stationary: true,
       mediumSpeed: true,
       repairs: true,
+      traffic: true,
     });
   });
 });
@@ -62,6 +66,7 @@ describe("saveToggles", () => {
       stationary: false,
       mediumSpeed: true,
       repairs: false,
+      traffic: true,
     };
     saveToggles(storage as unknown as Storage, toggles);
     expect(loadToggles(storage as unknown as Storage)).toEqual(toggles);

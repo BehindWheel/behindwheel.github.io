@@ -10,7 +10,8 @@ export type SearchHit = {
 // Substring search over every object's display name (case-insensitive, no
 // fuzz — 200-odd objects don't need an index). Cameras match on their name,
 // repairs on the road. The kinds keep the data's order: stationary, then
-// medium-speed sections, then repairs, truncated to the panel's budget.
+// medium-speed sections, then repairs, then the traffic sensors, truncated
+// to the panel's budget.
 export function searchObjects(data: CdnData, query: string, limit = 8): SearchHit[] {
   const q = query.trim().toLowerCase();
   if (!q) {
@@ -30,6 +31,11 @@ export function searchObjects(data: CdnData, query: string, limit = 8): SearchHi
   for (const repair of data.repairs) {
     if (repair.road.toLowerCase().includes(q)) {
       hits.push({ kind: "repairs", id: repair.id, label: repair.road });
+    }
+  }
+  for (const sensor of data.traffic) {
+    if (sensor.name.toLowerCase().includes(q)) {
+      hits.push({ kind: "traffic", id: sensor.id, label: sensor.name });
     }
   }
   return hits.slice(0, limit);

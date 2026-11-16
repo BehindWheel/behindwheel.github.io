@@ -38,8 +38,12 @@ type SignEntry = {
 };
 
 // The overlay lines show at every zoom; this registry is just which layers
-// follow which toggle.
-const LINE_LAYERS: Record<Exclude<SelectionKind, "stationary">, string[]> = {
+// follow which toggle. The stationary cameras and the traffic sensors are
+// points — they carry no line, so they have no entry here.
+const LINE_LAYERS: Record<
+  Exclude<SelectionKind, "stationary" | "traffic">,
+  string[]
+> = {
   mediumSpeed: [LAYER_IDS.mediumSpeed, LAYER_IDS.mediumSpeedHit],
   repairs: [LAYER_IDS.repairsLines, LAYER_IDS.repairsLinesHit],
 };

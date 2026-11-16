@@ -59,6 +59,18 @@ export type RoadRepair = {
   points?: CdnPoint[];
 };
 
+// The traffic sensors: points without an angle and without speed limits —
+// the domain has neither, so the payload carries neither.
+export type TrafficCamera = {
+  id: string;
+  name: string;
+  point: CdnPoint;
+  bidirectional: boolean;
+  region: string;
+  updateTime: string;
+  verified: boolean;
+};
+
 // The CDN regions are latin slugs; the UI reads them as the Belarusian
 // oblast names in the nominative — the panel row is labeled «Область».
 // A slug outside the map passes through unchanged.
@@ -92,10 +104,11 @@ export type CdnData = {
   stationary: StationaryCamera[];
   mediumSpeed: MediumSpeedCamera[];
   repairs: RoadRepair[];
+  traffic: TrafficCamera[];
 };
 
 // A CDN that never answers would otherwise leave the map on its loading
-// face forever — no error, no retry. 15s is generous for three ~25KB files;
+// face forever — no error, no retry. 15s is generous for four ~25KB files;
 // past that the error state with its retry button beats a silent spinner.
 const FETCH_TIMEOUT_MS = 15_000;
 
@@ -126,22 +139,28 @@ async function fetchJson<T>(url: string): Promise<T> {
 // costs nothing. No manual ETag cache is needed on top of that.
 export async function loadCdnData(): Promise<CdnData> {
   const manifest = await fetchJson<CdnManifest>(`${CDN_BASE}/manifest.json`);
-  const featureUrl = (name: string) => {
+  // A feature the manifest doesn't carry yet — the publisher hasn't shipped
+  // it — leaves its collection empty instead of breaking the whole map: the
+  // site must keep showing the layers it does have.
+  const featureItems = async <T>(name: string): Promise<T[]> => {
     const entry = manifest.features[name];
     if (!entry) {
-      throw new Error(`manifest.json: feature "${name}" is missing`);
+      return [];
     }
-    return `${CDN_BASE}${entry.url}`;
+    const payload = await fetchJson<{ items: T[] }>(`${CDN_BASE}${entry.url}`);
+    return payload.items;
   };
-  const [stationary, mediumSpeed, repairs] = await Promise.all([
-    fetchJson<{ items: StationaryCamera[] }>(featureUrl("stationary")),
-    fetchJson<{ items: MediumSpeedCamera[] }>(featureUrl("medium-speed")),
-    fetchJson<{ items: RoadRepair[] }>(featureUrl("repairs")),
+  const [stationary, mediumSpeed, repairs, traffic] = await Promise.all([
+    featureItems<StationaryCamera>("stationary"),
+    featureItems<MediumSpeedCamera>("medium-speed"),
+    featureItems<RoadRepair>("repairs"),
+    featureItems<TrafficCamera>("traffic"),
   ]);
   return {
     generatedAt: manifest.generatedAt,
-    stationary: stationary.items,
-    mediumSpeed: mediumSpeed.items,
-    repairs: repairs.items,
+    stationary,
+    mediumSpeed,
+    repairs,
+    traffic,
   };
 }

@@ -9,6 +9,7 @@ const DEFAULT_TOGGLES: LayerToggles = {
   stationary: true,
   mediumSpeed: true,
   repairs: true,
+  traffic: true,
 };
 
 export function loadToggles(storage: Storage): LayerToggles {
@@ -22,6 +23,7 @@ export function loadToggles(storage: Storage): LayerToggles {
       stationary: parsed?.stationary ?? true,
       mediumSpeed: parsed?.mediumSpeed ?? true,
       repairs: parsed?.repairs ?? true,
+      traffic: parsed?.traffic ?? true,
     };
   } catch {
     return { ...DEFAULT_TOGGLES };

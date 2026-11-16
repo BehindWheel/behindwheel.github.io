@@ -115,6 +115,10 @@
   background-image: url("/icons/road-repairs-point.svg");
 }
 
+.sign-marker.dot-mode[data-kind="traffic"]::after {
+  background-image: url("/icons/traffic.svg");
+}
+
 .sign-marker.dot-mode:hover,
 .sign-marker.dot-mode:focus-visible {
   /* Each maplibregl marker is its own stacking context — the tooltip's
@@ -151,6 +155,16 @@
 
 :root[data-theme="dark"] .sign-marker[data-kind="repairs"] .marker-dot {
   background: #e8604f;
+}
+
+/* The traffic sensors wear the sign's own teal — the blue the sign board is
+   drawn in, so the dot and the sign read as the same kind. */
+.sign-marker[data-kind="traffic"] .marker-dot {
+  background: #2f6f8f;
+}
+
+:root[data-theme="dark"] .sign-marker[data-kind="traffic"] .marker-dot {
+  background: #6fb0c8;
 }
 
 /* The region badges of the experiment's drill-down stage went away with the
