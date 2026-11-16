@@ -1313,3 +1313,87 @@ div.map-container {
   font-size: 12px;
   color: var(--muted);
 }
+
+/* The drive mode (DriveOverlay, lib/alerts/driveSession.ts): the mobile
+   app's navigation mode in its web minimum — a start/stop button, the alert
+   cards and the over-speed sign. The button rides the filter button's 34px
+   round skin, parked above the data pill; the active face colors the icon
+   with the accent so the mode reads as on. */
+.drive-button {
+  top: auto;
+  bottom: 48px;
+}
+
+.drive-button-active {
+  color: var(--accent-text);
+}
+
+/* The alert cards sit top-center — the app's drive alerts column. Same panel
+   skin, one row per camera: the sign artwork, the kind, the distance. */
+.drive-cards {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transform: translateX(-50%);
+}
+
+.drive-card {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 14px 8px 10px;
+  border-radius: 8px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
+  animation: panel-fade 150ms ease-out;
+}
+
+.drive-card-icon {
+  flex: none;
+  width: 34px;
+  height: 34px;
+}
+
+.drive-card-text {
+  display: flex;
+  flex-direction: column;
+  white-space: nowrap;
+}
+
+.drive-card-title {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.drive-card-distance {
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The over-speed sign is traffic-sign artwork: red ring, white ground, black
+   digits at every theme — the app's SpeedLimitSign, unthemed on purpose. */
+.speed-sign {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  display: flex;
+  width: 56px;
+  height: 56px;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 5px solid #c1121f;
+  border-radius: 50%;
+  color: #000;
+  font-size: 22px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.14);
+}

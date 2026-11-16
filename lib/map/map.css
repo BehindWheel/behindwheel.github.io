@@ -190,3 +190,16 @@
   white-space: nowrap;
   pointer-events: none;
 }
+
+/* The drive mode's user arrow (driveSession.ts): an inline-SVG navigation
+   arrow in currentColor — the accent ink like the app's navigation marker —
+   with a white edge so it holds on every basemap. The inner element carries
+   the bearing rotation; the marker's anchor stays centered on the point. */
+.drive-marker {
+  color: var(--accent-text, #2563eb);
+}
+
+.drive-arrow {
+  display: block;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.3));
+}
