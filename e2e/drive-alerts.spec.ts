@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import type { StationaryCamera } from "../lib/cdn";
+import { CAMERA_TITLES, DRIVE_START_LABEL } from "../lib/alerts/messages";
 
 // The full drive-mode journey on the production export: a fake GPS feed
 // approaches a real camera from the live CDN and the test asserts the whole
@@ -201,7 +202,7 @@ test("approaching a camera plays the voice warning chain", async ({ page }) => {
     [],
   );
 
-  await page.getByRole("button", { name: "Включить режим поездки" }).click();
+  await page.getByRole("button", { name: DRIVE_START_LABEL }).click();
 
   // Approach: 650 m out at 80 km/h, one 30 m fix per call — the alert zone
   // opens at 600 m, so the card, the sign and the phrases appear mid-drive.
@@ -215,7 +216,7 @@ test("approaching a camera plays the voice warning chain", async ({ page }) => {
   }
 
   await expect(page.locator(".drive-card").first()).toContainText(
-    "Стационарная камера",
+    CAMERA_TITLES.stationary,
   );
   await expect(page.locator(".speed-sign")).toHaveText(String(cam.speedLimit));
   // The phrase sequence: camera phrase, then the limit phrase, then the

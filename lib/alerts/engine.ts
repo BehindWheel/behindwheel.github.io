@@ -99,30 +99,6 @@ export function isUserOnCameraRoad(
   return Math.abs(crossTrackDistance) <= ROAD_HALF_WIDTH;
 }
 
-// The app's corridor pre-check: the event must sit inside the circle of
-// alertRadius drawn alertRadius ahead of the driver (the offset point), and
-// MIN_DISTANCE..alertRadius meters from the driver itself — events just
-// passed or behind stay silent until the driver leaves and re-approaches.
-function corridorDistance(
-  eventLatLng: LatLng,
-  location: DriveLocation,
-  alertRadius: number,
-): number | null {
-  const offsetLatLng = computeOffset(
-    location.latLng,
-    alertRadius,
-    location.bearing,
-  );
-  const distanceBetweenOffsetAndEvent = roundDistanceTo(eventLatLng, offsetLatLng);
-  if (distanceBetweenOffsetAndEvent >= alertRadius) {
-    return null;
-  }
-  const distanceToEvent = roundDistanceTo(location.latLng, eventLatLng);
-  return distanceToEvent >= MIN_DISTANCE && distanceToEvent < alertRadius
-    ? distanceToEvent
-    : null;
-}
-
 // The app's alertMessagesTransformation: no alerts below MIN_SPEED or without
 // a location fix; cameras additionally need their direction checks.
 export function computeAlerts(
@@ -133,9 +109,12 @@ export function computeAlerts(
   if (!location || location.speed <= MIN_SPEED) {
     return [];
   }
+  // The corridor's offset point is the same for every event in a fix — one
+  // computeOffset per fix, not per event.
+  const offsetLatLng = computeOffset(location.latLng, alertRadius, location.bearing);
   const alerts: Alert[] = [];
   for (const event of events) {
-    const distance = corridorDistance(event.position, location, alertRadius);
+    const distance = corridorDistance(event.position, location, alertRadius, offsetLatLng);
     if (distance === null) {
       continue;
     }
@@ -154,6 +133,26 @@ export function computeAlerts(
     }
   }
   return alerts;
+}
+
+// The app's corridor pre-check: the event must sit inside the circle of
+// alertRadius drawn alertRadius ahead of the driver (the offset point), and
+// MIN_DISTANCE..alertRadius meters from the driver itself — events just
+// passed or behind stay silent until the driver leaves and re-approaches.
+function corridorDistance(
+  eventLatLng: LatLng,
+  location: DriveLocation,
+  alertRadius: number,
+  offsetLatLng: LatLng,
+): number | null {
+  const distanceBetweenOffsetAndEvent = roundDistanceTo(eventLatLng, offsetLatLng);
+  if (distanceBetweenOffsetAndEvent >= alertRadius) {
+    return null;
+  }
+  const distanceToEvent = roundDistanceTo(location.latLng, eventLatLng);
+  return distanceToEvent >= MIN_DISTANCE && distanceToEvent < alertRadius
+    ? distanceToEvent
+    : null;
 }
 
 function toCameraAlert(event: AlertableCamera, distance: number): CameraAlert {

@@ -17,6 +17,11 @@ import { alertableCameras } from "../alerts/events";
 import { AlertSoundController } from "../alerts/sounds";
 import { DynamicZoom } from "../alerts/dynamicZoom";
 import { computeHeading, distanceBetween, type LatLng } from "../alerts/geo";
+import {
+  GPS_ERROR_DENIED,
+  GPS_ERROR_INSECURE,
+  GPS_ERROR_UNAVAILABLE,
+} from "../alerts/messages";
 
 // The app's NavigationMarker animation: positions glide over 1400 ms, a jump
 // past 300 m (a cold GPS fix, tunnel exit) snaps instead of flying.
@@ -72,16 +77,14 @@ export class DriveSession {
     // the LAN address) never gets a permission prompt at all — say so before
     // the silent failure reads as a broken feature.
     if (typeof window !== "undefined" && !window.isSecureContext) {
-      this.gpsError = "Геолокация работает только по HTTPS — откройте сайт по защищённому адресу";
+      this.gpsError = GPS_ERROR_INSECURE;
       this.publish();
     }
     this.watchId = navigator.geolocation.watchPosition(
       (position) => this.onFix(position),
       (error) => {
         this.gpsError =
-          error.code === error.PERMISSION_DENIED
-            ? "Нет доступа к геолокации — разрешите её в настройках браузера"
-            : "GPS недоступен — сигнала нет, попробуйте у окна или на улице";
+          error.code === error.PERMISSION_DENIED ? GPS_ERROR_DENIED : GPS_ERROR_UNAVAILABLE;
         this.publish();
       },
       { enableHighAccuracy: true, maximumAge: 1000, timeout: 15000 },
