@@ -91,6 +91,10 @@ const KIND_ICONS: Record<SelectionKind, string> = {
 export default function MapScreen() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  // The "where am I" control: the drive mode takes the position display away
+  // from it (removeControl stops its watch and clears dot and circle) and
+  // hands it back on exit.
+  const geolocateRef = useRef<maplibregl.GeolocateControl | null>(null);
   const dataRef = useRef<CdnData | null>(null);
   const markersRef = useRef<MarkerGroups | null>(null);
   // The marker tiers (dots → small → large signs) own the sign display from
@@ -245,8 +249,9 @@ export default function MapScreen() {
     if (!container) {
       return;
     }
-    const map = createMap(container);
+    const { map, geolocate } = createMap(container);
     mapRef.current = map;
+    geolocateRef.current = geolocate;
 
     // The fetch starts on mount, in parallel with the style/tile load. The
     // pre-attached catch keeps an early rejection silent until loadData
@@ -355,17 +360,28 @@ export default function MapScreen() {
   // is nothing to navigate against, so the tap stays a no-op. A session
   // lives until stopped or until the map effect tears it down.
   const toggleDrive = useCallback(() => {
+    const map = mapRef.current;
+    const geolocate = geolocateRef.current;
     if (driveRef.current) {
       driveRef.current.stop();
       driveRef.current = null;
       setDriveActive(false);
       setDrive(null);
+      // The "where am I" button returns with its dot and accuracy circle.
+      if (map && geolocate) {
+        map.addControl(geolocate, "bottom-right");
+      }
       return;
     }
-    const map = mapRef.current;
     const data = dataRef.current;
     if (!map || !data) {
       return;
+    }
+    // Drive owns the position display now — the control's removal also
+    // stops any watch it ran, so the dot and circle never compete with the
+    // drive arrow.
+    if (geolocate) {
+      map.removeControl(geolocate);
     }
     const session = new DriveSession(map, data, setDrive);
     driveRef.current = session;

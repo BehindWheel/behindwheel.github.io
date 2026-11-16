@@ -22,8 +22,14 @@ maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
 // The single MapLibre bootstrap — the same role as the dashboard's
 // ui/map/createMap.js: vector style, bounds, the bottom-right controls. The
 // attribution control is off (the user's call, 2026-11-14, like the
-// dashboard's).
-export function createMap(container: HTMLElement): maplibregl.Map {
+// dashboard's). The geolocate control comes back alongside the map: the
+// drive mode removes it while it owns the position display (the control's
+// onRemove stops its watch and clears its dot and accuracy circle), and
+// re-adds it on exit.
+export function createMap(container: HTMLElement): {
+  map: maplibregl.Map;
+  geolocate: maplibregl.GeolocateControl;
+} {
   let appliedStyle = styleFor(getTheme());
   const map = new maplibregl.Map({
     container,
@@ -34,10 +40,10 @@ export function createMap(container: HTMLElement): maplibregl.Map {
   // showCompass: false — the dashboard's navigation control carries zoom only;
   // the north arrow reads as noise on a map that nobody rotates.
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
-  map.addControl(
-    new maplibregl.GeolocateControl({ positionOptions: { enableHighAccuracy: true } }),
-    "bottom-right",
-  );
+  const geolocate = new maplibregl.GeolocateControl({
+    positionOptions: { enableHighAccuracy: true },
+  });
+  map.addControl(geolocate, "bottom-right");
   onThemeChange(() => {
     const next = styleFor(getTheme());
     if (next !== appliedStyle) {
@@ -45,7 +51,7 @@ export function createMap(container: HTMLElement): maplibregl.Map {
       map.setStyle(next);
     }
   });
-  return map;
+  return { map, geolocate };
 }
 
 // setStyle() wipes every source and layer, so overlays must be replayed on
