@@ -33,7 +33,7 @@
 .marker-body {
   position: relative;
   display: block;
-  transition: opacity 180ms ease, transform 180ms ease, visibility 180ms ease;
+  transition: opacity 150ms ease, visibility 150ms ease;
 }
 
 .sign-marker img {
@@ -73,22 +73,21 @@
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
   opacity: 0;
   visibility: hidden;
-  transform: translateX(-50%) scale(0.4);
-  transition: opacity 200ms ease, transform 200ms ease, visibility 200ms ease;
+  transform: translateX(-50%);
+  transition: opacity 150ms ease, visibility 150ms ease;
   pointer-events: none;
 }
 
 .sign-marker.dot-mode .marker-dot {
   opacity: 1;
   visibility: visible;
-  transform: translateX(-50%) scale(1);
+  transform: translateX(-50%);
   pointer-events: auto;
 }
 
 .sign-marker.dot-mode .marker-body {
   opacity: 0;
   visibility: hidden;
-  transform: scale(0.8);
   pointer-events: none;
 }
 
