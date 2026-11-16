@@ -20,13 +20,16 @@ describe("REGIONS", () => {
   });
 });
 
-type Feature = { name: string; items: unknown[] };
+type Feature = { name: string; items: unknown[]; schema?: number };
 
 // A stubbed fetch serving a manifest plus the three feature files.
 async function stubCdn(features: Feature[]) {
   const bodies = new Map<string, string>();
   for (const feature of features) {
-    bodies.set(`/${feature.name}.json`, JSON.stringify({ items: feature.items }));
+    bodies.set(
+      `/${feature.name}.json`,
+      JSON.stringify({ schema: feature.schema ?? 1, items: feature.items }),
+    );
   }
   const entries: CdnManifest["features"] = {};
   for (const feature of features) {
@@ -80,6 +83,21 @@ describe("loadCdnData", () => {
       // "repairs" never lands in the manifest
     ]);
     await expect(loadCdnData()).rejects.toThrow('feature "repairs" is missing');
+    vi.unstubAllGlobals();
+  });
+
+  it("skips a feature whose body carries a newer schema, keeping the rest", async () => {
+    await stubCdn([
+      { name: "stationary", items: [{ id: "s1" }], schema: 2 },
+      { name: "medium-speed", items: [{ id: "m1" }] },
+      { name: "repairs", items: [{ id: "r1" }] },
+    ]);
+    const data = await loadCdnData();
+    // the body's shape grew past what this client reads — the layer stays
+    // off and the rest of the map keeps working
+    expect(data.stationary).toEqual([]);
+    expect(data.mediumSpeed).toHaveLength(1);
+    expect(data.repairs).toHaveLength(1);
     vi.unstubAllGlobals();
   });
 });
