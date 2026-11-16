@@ -61,10 +61,11 @@
    center sits on the geographic point — on the line end it belongs to. */
 .marker-dot {
   position: absolute;
-  left: 50%;
-  /* Root is 20px tall (the sign keeps bottom anchoring at the point); the
+  /* Root is 18px wide (marker-body/sign img); the 8px dot centered is left: 5px.
+     Root is 20px tall (the sign keeps bottom anchoring at the point); the
      dot's center must land on that point, so its bottom sits 4px below the
      root's bottom edge. */
+  left: 5px;
   bottom: -4px;
   width: 8px;
   height: 8px;
@@ -73,7 +74,6 @@
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
   opacity: 0;
   visibility: hidden;
-  transform: translateX(-50%);
   transition: opacity 150ms ease, visibility 150ms ease;
   pointer-events: none;
 }
@@ -81,7 +81,6 @@
 .sign-marker.dot-mode .marker-dot {
   opacity: 1;
   visibility: visible;
-  transform: translateX(-50%);
   pointer-events: auto;
 }
 
