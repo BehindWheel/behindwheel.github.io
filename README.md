@@ -30,10 +30,9 @@ overlay shows the limit and a voice prompt plays; camera warnings play the
 camera phrase followed by the limit phrase, at most once per camera per five
 minutes.
 
-The voice prompts in `public/audio/` are pre-rendered with
-[ZONOS3-Mini](https://github.com/Zyphra/ZONOS3-Mini) (the ggml CPU build,
-one speaker embedding), so the drive mode speaks without any runtime TTS —
-the same architecture as the app's bundled phrases.
+The voice prompts in `public/audio/` are the mobile app's own bundled
+recordings — the same files the client plays — so the drive mode sounds
+exactly like the app and speaks without any runtime TTS.
 
 ## Development
 
