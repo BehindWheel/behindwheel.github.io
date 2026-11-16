@@ -38,3 +38,7 @@ yarn-error.log*
 
 # local dev server (scripts/dev-server.sh)
 .dev-server/
+
+# playwright artifacts
+test-results/
+playwright-report/
