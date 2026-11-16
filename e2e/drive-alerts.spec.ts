@@ -96,7 +96,11 @@ async function ensureMapReady(page: Page): Promise<void> {
 }
 
 test("approaching a camera plays the voice warning chain", async ({ page }) => {
+  // The paced demo runs ~30 s of real phrase playback; the default 30 s
+  // test timeout is too tight for it.
+  test.setTimeout(90_000);
   const cam = await pickCamera();
+  const stepMs = Number(process.env.E2E_STEP_MS ?? 0);
 
   await page.addInitScript(
     ({ lat, lng, angle }) => {
@@ -104,9 +108,12 @@ test("approaching a camera plays the voice warning chain", async ({ page }) => {
       const rad = (d: number) => (d * Math.PI) / 180;
       const w = window as unknown as Record<string, unknown>;
 
-      // The voice spy: every phrase the queue constructs is recorded, and
-      // playback completes on a timer so the queue advances like with real
-      // short files.
+      // The voice spy: every phrase the queue constructs is recorded. When
+      // playback really works (a headed run with sound), the queue advances
+      // on the file's own `ended` — the phrases play sequentially, never
+      // overlapping. When playback is unavailable (autoplay rejection, a
+      // codec gap), the spy simulates the shortest possible phrase so the
+      // queue still advances headless.
       const played: string[] = [];
       w.__audio = played;
       const NativeAudio = window.Audio;
@@ -116,11 +123,25 @@ test("approaching a camera plays the voice warning chain", async ({ page }) => {
           played.push(src);
         }
         play(): Promise<void> {
-          void super.play().catch(() => {
-            // autoplay rejection or a codec gap — the queue keeps going
-          });
-          setTimeout(() => this.dispatchEvent(new Event("ended")), 30);
-          return Promise.resolve();
+          return super.play().then(
+            () => {
+              let done = false;
+              const finish = () => {
+                if (!done) {
+                  done = true;
+                  this.dispatchEvent(new Event("ended"));
+                }
+              };
+              this.addEventListener("ended", finish, { once: true });
+              // A backstop for a stream that never ends; longer than the
+              // longest phrase file.
+              setTimeout(finish, 10_000);
+            },
+            () => {
+              setTimeout(() => this.dispatchEvent(new Event("ended")), 30);
+              return Promise.resolve();
+            },
+          );
         }
       }
       window.Audio = SpyAudio as unknown as typeof Audio;
@@ -188,21 +209,29 @@ test("approaching a camera plays the voice warning chain", async ({ page }) => {
     await page.evaluate(() =>
       (window as unknown as { __pump?: () => number }).__pump?.(),
     );
+    if (stepMs > 0) {
+      await page.waitForTimeout(stepMs);
+    }
   }
 
   await expect(page.locator(".drive-card").first()).toContainText(
     "Стационарная камера",
   );
   await expect(page.locator(".speed-sign")).toHaveText(String(cam.speedLimit));
+  // The phrase sequence: camera phrase, then the limit phrase, then the
+  // over-speed one. A paced run (E2E_STEP_MS) stretches the drive past the
+  // tracker's five seconds, so the Regular → Double transition at the 150 m
+  // mark re-warns — the app's over-speed semantics, worth asserting too.
+  const chain = [
+    "/audio/stationary_camera.mp3",
+    `/audio/limit_${cam.speedLimit}.mp3`,
+    "/audio/sound_over_speed.mp3",
+  ];
   await expect
     .poll(() =>
       page.evaluate(() => (window as unknown as { __audio: string[] }).__audio),
-    )
-    .toEqual([
-      "/audio/stationary_camera.mp3",
-      `/audio/limit_${cam.speedLimit}.mp3`,
-      "/audio/sound_over_speed.mp3",
-    ]);
+    { timeout: 60_000 })
+    .toEqual(stepMs > 0 ? [...chain, "/audio/sound_over_speed.mp3"] : chain);
 
   // Cruising past the camera keeps the voice quiet — the played-alert
   // tracker allows one warning per camera per five minutes.
