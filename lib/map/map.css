@@ -33,7 +33,9 @@
 .marker-body {
   position: relative;
   display: block;
-  transition: opacity 150ms ease, visibility 150ms ease;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 150ms ease, visibility 0s linear 0s;
 }
 
 .sign-marker img {
@@ -61,10 +63,9 @@
    center sits on the geographic point — on the line end it belongs to. */
 .marker-dot {
   position: absolute;
-  /* Root is 18px wide (marker-body/sign img); the 8px dot centered is left: 5px.
-     Root is 20px tall (the sign keeps bottom anchoring at the point); the
-     dot's center must land on that point, so its bottom sits 4px below the
-     root's bottom edge. */
+  /* Root is 18px wide (sign-marker); the 8px dot centered is left: 5px.
+     Anchor is bottom (the geographic point). The dot's center must land on
+     that point, so its bottom sits 4px below the root's bottom edge. */
   left: 5px;
   bottom: -4px;
   width: 8px;
@@ -74,7 +75,7 @@
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
   opacity: 0;
   visibility: hidden;
-  transition: opacity 150ms ease, visibility 150ms ease;
+  transition: opacity 150ms ease, visibility 0s linear 150ms;
   pointer-events: none;
 }
 
@@ -82,12 +83,14 @@
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
+  transition: opacity 150ms ease, visibility 0s linear 0s;
 }
 
 .sign-marker.dot-mode .marker-body {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
+  transition: opacity 150ms ease, visibility 0s linear 150ms;
 }
 
 /* The dot tier's hover tooltip: the kind's artwork + a bare name chip above
