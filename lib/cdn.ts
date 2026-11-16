@@ -29,6 +29,7 @@ export type StationaryCamera = {
   speedCar: number;
   speedTruck: number;
   region: string;
+  verified: boolean;
 };
 
 export type MediumSpeedCamera = {
@@ -42,6 +43,7 @@ export type MediumSpeedCamera = {
   region: string;
   points: CdnPoint[];
   updateTime: string;
+  verified: boolean;
 };
 
 export type RoadRepair = {
@@ -134,6 +136,16 @@ async function fetchJson<T>(url: string): Promise<T> {
   return (await res.json()) as T;
 }
 
+// The body schema this client reads, per feature. A file that carries a newer
+// schema is skipped — the compatibility gate of the CDN contract: the client
+// keeps the layers it can read instead of crashing on a shape it cannot.
+const SUPPORTED_SCHEMA: Record<string, number> = {
+  stationary: 1,
+  "medium-speed": 1,
+  repairs: 1,
+  traffic: 1,
+};
+
 // The CDN sets max-age=0 + must-revalidate + ETag on every file, so plain
 // fetch() already revalidates: the browser sends If-None-Match and a 304
 // costs nothing. No manual ETag cache is needed on top of that.
@@ -147,7 +159,16 @@ export async function loadCdnData(): Promise<CdnData> {
     if (!entry) {
       return [];
     }
-    const payload = await fetchJson<{ items: T[] }>(`${CDN_BASE}${entry.url}`);
+    const payload = await fetchJson<{ schema?: number; items: T[] }>(`${CDN_BASE}${entry.url}`);
+    const supported = SUPPORTED_SCHEMA[name];
+    if (supported !== undefined && payload.schema !== undefined && payload.schema > supported) {
+      // The feature's body grew a shape this client cannot read: the layer stays
+      // off and the rest of the map keeps working.
+      console.warn(
+        `cdn: feature "${name}" carries schema ${payload.schema}, this client reads ${supported} — the feature is skipped`,
+      );
+      return [];
+    }
     return payload.items;
   };
   const [stationary, mediumSpeed, repairs, traffic] = await Promise.all([

@@ -87,6 +87,7 @@ function detailRows(detail: Detail) {
           value={camera.bidirectional ? "Двухсторонняя" : "Односторонняя"}
         />
         <Row label="Область" value={regionName(camera.region)} />
+        <Row label="Проверен" value={camera.verified ? "Да" : "Нет"} />
         <Row label="Обновлено" value={formatDate(camera.updateTime)} />
       </>
     );
@@ -101,6 +102,7 @@ function detailRows(detail: Detail) {
           value={camera.bidirectional ? "Двухсторонняя" : "Односторонняя"}
         />
         <Row label="Область" value={regionName(camera.region)} />
+        <Row label="Проверен" value={camera.verified ? "Да" : "Нет"} />
         <Row label="Обновлено" value={formatDate(camera.updateTime)} />
       </>
     );
@@ -114,6 +116,7 @@ function detailRows(detail: Detail) {
           value={sensor.bidirectional ? "Двухсторонняя" : "Односторонняя"}
         />
         <Row label="Область" value={regionName(sensor.region)} />
+        <Row label="Проверен" value={sensor.verified ? "Да" : "Нет"} />
         <Row label="Обновлено" value={formatDate(sensor.updateTime)} />
       </>
     );
@@ -129,6 +132,7 @@ function detailRows(detail: Detail) {
         <Row label="Ограничение" value={`${repair.speed} км/ч`} />
       )}
       <Row label="Область" value={regionName(repair.region)} />
+      <Row label="Проверен" value={repair.verified ? "Да" : "Нет"} />
       <Row label="Обновлено" value={formatDate(repair.updateTime)} />
     </>
   );
