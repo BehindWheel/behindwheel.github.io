@@ -43,6 +43,7 @@ npm run dev       # http://localhost:3000
 npm run lint      # eslint
 npm test          # vitest — the lib/ helpers
 npm run build     # static export into out/
+npm run test:e2e  # playwright — the drive mode on the built export
 ```
 
 To check the production build locally, serve the export (and let the service
