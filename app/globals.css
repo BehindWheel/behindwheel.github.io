@@ -1224,3 +1224,20 @@ div.map-container {
   font-variant-numeric: tabular-nums;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.14);
 }
+
+/* The GPS failure pill (GpsNotice): the same pill skin as the data pill,
+   parked above the drive button so the reason reads without a toast. */
+.drive-gps-error {
+  position: absolute;
+  left: 12px;
+  bottom: 96px;
+  z-index: 10;
+  max-width: 320px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  color: var(--error-text);
+  font-size: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
+}

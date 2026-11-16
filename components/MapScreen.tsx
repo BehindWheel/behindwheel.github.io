@@ -11,7 +11,7 @@ import { loadToggles, saveToggles } from "@/lib/layerToggles";
 import { searchObjects, type SearchHit } from "@/lib/search";
 import { createMap, onStyleLoad } from "@/lib/map/createMap";
 import { DriveSession, type DriveState } from "@/lib/alerts/driveSession";
-import { DriveAlertCards, DriveButton, SpeedLimitSign } from "@/components/DriveOverlay";
+import { DriveAlertCards, DriveButton, GpsNotice, SpeedLimitSign } from "@/components/DriveOverlay";
 import { markerSearch, parseMarkerParam } from "@/lib/routing";
 import { getTheme, onThemeChange, setTheme, type Theme } from "@/lib/theme";
 import {
@@ -437,6 +437,7 @@ export default function MapScreen() {
           <>
             <DriveAlertCards state={drive} />
             <SpeedLimitSign overSpeed={drive.overSpeed} />
+            {drive.gpsError && <GpsNotice error={drive.gpsError} />}
           </>
         )}
         {filtersOpen && (
