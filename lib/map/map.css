@@ -33,6 +33,7 @@
 .marker-body {
   position: relative;
   display: block;
+  transition: opacity 180ms ease, transform 180ms ease, visibility 180ms ease;
 }
 
 .sign-marker img {
@@ -55,25 +56,40 @@
    object. Camera reads the ink token (dark on light, light on dark); the
    other two reuse their line colors — a dot always matches the line it
    belongs to. */
+/* The dot is absolutely positioned so it overlays the sign without changing
+   the marker's height (the sign keeps bottom anchoring at the point). Its
+   center sits on the geographic point — on the line end it belongs to. */
 .marker-dot {
-  display: none;
+  position: absolute;
+  left: 50%;
+  /* Root is 20px tall (the sign keeps bottom anchoring at the point); the
+     dot's center must land on that point, so its bottom sits 4px below the
+     root's bottom edge. */
+  bottom: -4px;
   width: 8px;
   height: 8px;
   border-radius: 999px;
   border: 1.5px solid rgb(255 255 255 / 0.9);
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
-  /* Anchor is bottom (the sign's tip sits on its point) — raise the circle
-     so its center matches the sign's visual center, or the dot-to-sign
-     switch reads as a jump down. */
-  transform: translateY(-4px);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-50%) scale(0.4);
+  transition: opacity 200ms ease, transform 200ms ease, visibility 200ms ease;
+  pointer-events: none;
 }
 
 .sign-marker.dot-mode .marker-dot {
-  display: block;
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) scale(1);
+  pointer-events: auto;
 }
 
 .sign-marker.dot-mode .marker-body {
-  display: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.8);
+  pointer-events: none;
 }
 
 /* The dot tier's hover tooltip: the kind's artwork + a bare name chip above
