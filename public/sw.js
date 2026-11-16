@@ -4,8 +4,8 @@
    - the CDN data: network first with the last good snapshot kept — offline
      the map opens with the previous picture instead of nothing;
    - same-origin static assets: cache first — every name under _next/static
-     is content-hashed, the rest (icons, styles, the worker) change only
-     with a deploy, and the shell cache is versioned with the file.
+     is content-hashed, the rest (icons, styles, audio, the worker) change
+     only with a deploy, and the shell cache is versioned with the file.
    Map tiles are deliberately not cached: terabytes of temptation, and the
    browser's own HTTP cache already softens repeat visits. */
 
@@ -13,7 +13,7 @@ const VERSION = "v1";
 const SHELL_CACHE = `shell-${VERSION}`;
 const DATA_CACHE = `data-${VERSION}`;
 const DATA_ORIGIN = "https://cdn-data.behindwheel.workers.dev";
-const STATIC_PREFIXES = ["/_next/static/", "/icons/", "/styles/"];
+const STATIC_PREFIXES = ["/_next/static/", "/icons/", "/styles/", "/audio/"];
 const STATIC_FILES = ["/maplibre-gl-worker.mjs", "/apple-touch-icon.png", "/og.png"];
 
 self.addEventListener("install", () => {

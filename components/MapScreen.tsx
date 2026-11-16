@@ -10,6 +10,8 @@ import { loadCdnData, REGIONS, type CdnData } from "@/lib/cdn";
 import { loadToggles, saveToggles } from "@/lib/layerToggles";
 import { searchObjects, type SearchHit } from "@/lib/search";
 import { createMap, onStyleLoad } from "@/lib/map/createMap";
+import { DriveSession, type DriveState } from "@/lib/alerts/driveSession";
+import { DriveAlertCards, DriveButton, SpeedLimitSign } from "@/components/DriveOverlay";
 import { markerSearch, parseMarkerParam } from "@/lib/routing";
 import { getTheme, onThemeChange, setTheme, type Theme } from "@/lib/theme";
 import {
@@ -122,6 +124,12 @@ export default function MapScreen() {
   // The data in state drives the detail panel; the ref twin drives the
   // style-swap replay, which runs outside render.
   const [data, setData] = useState<CdnData | null>(null);
+  // The drive mode: the session owns the GPS watch, the user arrow and the
+  // voice imperatively (like the tiers own the signs); React only mirrors
+  // its snapshot for the cards and the sign. The ref survives re-renders.
+  const [driveActive, setDriveActive] = useState(false);
+  const [drive, setDrive] = useState<DriveState | null>(null);
+  const driveRef = useRef<DriveSession | null>(null);
   const hits = useMemo(
     () => (data && query.trim() !== "" ? searchObjects(data, query) : []),
     [data, query],
@@ -257,6 +265,12 @@ export default function MapScreen() {
       map.once("load", load);
     }
     return () => {
+      // The drive session holds a marker on this map — it must stop before
+      // the map dies, or its next GPS fix touches a dead container.
+      driveRef.current?.stop();
+      driveRef.current = null;
+      setDriveActive(false);
+      setDrive(null);
       tiersRef.current?.remove();
       tiersRef.current = null;
       map.remove();
@@ -330,6 +344,28 @@ export default function MapScreen() {
     void loadData(map, loadCdnData());
   }, [loadData]);
 
+  // The drive toggle needs both the map and the data — without either there
+  // is nothing to navigate against, so the tap stays a no-op. A session
+  // lives until stopped or until the map effect tears it down.
+  const toggleDrive = useCallback(() => {
+    if (driveRef.current) {
+      driveRef.current.stop();
+      driveRef.current = null;
+      setDriveActive(false);
+      setDrive(null);
+      return;
+    }
+    const map = mapRef.current;
+    const data = dataRef.current;
+    if (!map || !data) {
+      return;
+    }
+    const session = new DriveSession(map, data, setDrive);
+    driveRef.current = session;
+    session.start();
+    setDriveActive(true);
+  }, []);
+
   // The theme toggle: an explicit choice rides localStorage through
   // setTheme; with no choice the device scheme wins and this state follows
   // its flips via the store subscription.
@@ -394,6 +430,15 @@ export default function MapScreen() {
             aria-hidden="true"
           />
         </button>
+        {/* The drive mode's chrome: the button lives above the data pill, the
+           cards and the over-speed sign ride the map while the mode runs. */}
+        <DriveButton active={driveActive} onToggle={toggleDrive} />
+        {driveActive && drive && (
+          <>
+            <DriveAlertCards state={drive} />
+            <SpeedLimitSign overSpeed={drive.overSpeed} />
+          </>
+        )}
         {filtersOpen && (
           <div className="panel" id="layer-panel" inert={backgroundInert ? true : undefined}>
             {/* Search first — it's the primary way in once you know what
