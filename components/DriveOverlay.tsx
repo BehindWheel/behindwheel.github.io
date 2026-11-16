@@ -7,12 +7,14 @@
 
 import type { DriveState } from "@/lib/alerts/driveSession";
 import type { Alert, OverSpeedAlert } from "@/lib/alerts/engine";
+import {
+  CAMERA_TITLES,
+  DISTANCE_UNIT,
+  DRIVE_START_LABEL,
+  DRIVE_STOP_LABEL,
+  OVER_SPEED_LABEL,
+} from "@/lib/alerts/messages";
 
-const ALERT_TITLES: Record<Alert["cameraType"], string> = {
-  stationary: "Стационарная камера",
-  mediumSpeed: "Участок средней скорости",
-  mobile: "Мобильная камера",
-};
 
 const ALERT_ICONS: Record<Alert["cameraType"], string> = {
   stationary: "/icons/camera.svg",
@@ -21,12 +23,13 @@ const ALERT_ICONS: Record<Alert["cameraType"], string> = {
 };
 
 export function DriveButton({ active, onToggle }: { active: boolean; onToggle: () => void }) {
+  const label = active ? DRIVE_STOP_LABEL : DRIVE_START_LABEL;
   return (
     <button
       type="button"
       className={`filter-button drive-button${active ? " drive-button-active" : ""}`}
-      aria-label={active ? "Завершить режим поездки" : "Включить режим поездки"}
-      title={active ? "Завершить режим поездки" : "Включить режим поездки"}
+      aria-label={label}
+      title={label}
       onClick={onToggle}
     >
       <span className="svg-icon icon-car" aria-hidden="true" />
@@ -49,8 +52,10 @@ export function DriveAlertCards({ state }: { state: DriveState }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="drive-card-icon" src={ALERT_ICONS[alert.cameraType]} alt="" />
           <div className="drive-card-text">
-            <span className="drive-card-title">{ALERT_TITLES[alert.cameraType]}</span>
-            <span className="drive-card-distance">{alert.distance} м</span>
+            <span className="drive-card-title">{CAMERA_TITLES[alert.cameraType]}</span>
+            <span className="drive-card-distance">
+              {alert.distance} {DISTANCE_UNIT}
+            </span>
           </div>
         </div>
       ))}
@@ -69,7 +74,7 @@ export function SpeedLimitSign({ overSpeed }: { overSpeed: OverSpeedAlert }) {
       className="speed-sign"
       role="alert"
       aria-live="assertive"
-      aria-label={`Превышение, ограничение ${overSpeed.speedLimit}`}
+      aria-label={OVER_SPEED_LABEL(overSpeed.speedLimit)}
     >
       {overSpeed.speedLimit}
     </div>

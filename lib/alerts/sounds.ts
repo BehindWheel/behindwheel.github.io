@@ -27,8 +27,12 @@ function cameraSound(cameraType: CameraType): string {
   }
 }
 
+// The limits the app ships a phrase for (Sound.kt's SpeedLimit40..120);
+// anything else stays silent — a camera without a phrase can't warn.
+const SUPPORTED_LIMITS = [40, 50, 60, 70, 80, 90, 100, 110, 120];
+
 function limitSound(speedLimit: number): string | null {
-  return [40, 50, 60, 70, 80, 90, 100, 110, 120].includes(speedLimit)
+  return SUPPORTED_LIMITS.includes(speedLimit)
     ? SOUND_FILES.limit(speedLimit)
     : null;
 }
