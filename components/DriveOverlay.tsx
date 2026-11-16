@@ -75,3 +75,14 @@ export function SpeedLimitSign({ overSpeed }: { overSpeed: OverSpeedAlert }) {
     </div>
   );
 }
+
+// Why the map has no fixes: an insecure origin, a denied permission, a dead
+// GPS. The mode keeps running — the pill rides above the drive button and
+// the first good fix clears it.
+export function GpsNotice({ error }: { error: string }) {
+  return (
+    <div className="drive-gps-error" role="status">
+      {error}
+    </div>
+  );
+}

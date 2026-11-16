@@ -85,6 +85,7 @@ function approachFixes(toLat: number, toLng: number, bearing: number) {
 
 describe("DriveSession", () => {
   let watchCb: ((p: GeolocationPosition) => void) | null = null;
+  let errorCb: ((e: GeolocationPositionError) => void) | null = null;
 
   beforeEach(() => {
     // The marker element builder needs just enough DOM for the arrow markup.
@@ -102,12 +103,17 @@ describe("DriveSession", () => {
     vi.stubGlobal("Audio", FakeAudio as unknown as typeof Audio);
     vi.stubGlobal("navigator", {
       geolocation: {
-        watchPosition: (ok: (p: GeolocationPosition) => void) => {
+        watchPosition: (
+          ok: (p: GeolocationPosition) => void,
+          fail: (e: GeolocationPositionError) => void,
+        ) => {
           watchCb = ok;
+          errorCb = fail;
           return 1;
         },
         clearWatch: () => {
           watchCb = null;
+          errorCb = null;
         },
       },
     });
@@ -204,5 +210,37 @@ describe("DriveSession", () => {
       "/audio/limit_60.mp3",
       "/audio/sound_over_speed.mp3",
     ]);
+  });
+
+  it("names the GPS failure and clears it with the first good fix", async () => {
+    const states: DriveState[] = [];
+    const session = new DriveSession(
+      fakeMap as never,
+      { stationary: [], mediumSpeed: [], repairs: [] } as never,
+      (state) => states.push(state),
+    );
+    session.start();
+
+    // A denied permission reads as a human message, not as silence.
+    errorCb!({ code: 1, message: "user denied", PERMISSION_DENIED: 1 } as GeolocationPositionError);
+    expect(states[states.length - 1].gpsError).toContain("Нет доступа к геолокации");
+
+    // The first good fix clears it and drives the state again.
+    watchCb!({
+      coords: {
+        latitude: 53.647197,
+        longitude: 23.810971,
+        heading: 0,
+        speed: 0,
+        accuracy: 5,
+        altitude: null,
+        altitudeAccuracy: null,
+      },
+      timestamp: Date.now(),
+    } as GeolocationPosition);
+    expect(states[states.length - 1].gpsError).toBeNull();
+
+    session.stop();
+    await new Promise((r) => setTimeout(r, 10));
   });
 });

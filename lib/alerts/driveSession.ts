@@ -31,6 +31,9 @@ export type DriveState = {
   location: DriveLocation | null;
   alerts: Alert[];
   overSpeed: OverSpeedAlert;
+  // Why the phone has no fixes: a denied permission, an insecure origin or
+  // a dead GPS signal — shown as a pill, cleared by the first good fix.
+  gpsError: string | null;
 };
 
 export class DriveSession {
@@ -47,6 +50,7 @@ export class DriveSession {
   private alerts: Alert[] = [];
   private overSpeed: OverSpeedAlert = { kind: "none" };
   private lastOverSpeed: OverSpeedAlert = { kind: "none" };
+  private gpsError: string | null = null;
   // The marker glide: rAF interpolation between the previous fix and the new
   // one, restarted from the interpolated position when a fix lands mid-glide.
   private animation: { start: LatLng; end: LatLng; startedAt: number; frame: number } | null =
@@ -64,11 +68,21 @@ export class DriveSession {
   }
 
   start(): void {
+    // Geolocation is a secure-context API: an http:// page (a phone opening
+    // the LAN address) never gets a permission prompt at all — say so before
+    // the silent failure reads as a broken feature.
+    if (typeof window !== "undefined" && !window.isSecureContext) {
+      this.gpsError = "Геолокация работает только по HTTPS — откройте сайт по защищённому адресу";
+      this.publish();
+    }
     this.watchId = navigator.geolocation.watchPosition(
       (position) => this.onFix(position),
-      () => {
-        // A denied permission or a dead GPS signal: the mode stays on with
-        // the last fix — the pill and the error face stay out of drive mode.
+      (error) => {
+        this.gpsError =
+          error.code === error.PERMISSION_DENIED
+            ? "Нет доступа к геолокации — разрешите её в настройках браузера"
+            : "GPS недоступен — сигнала нет, попробуйте у окна или на улице";
+        this.publish();
       },
       { enableHighAccuracy: true, maximumAge: 1000, timeout: 15000 },
     );
@@ -90,6 +104,7 @@ export class DriveSession {
     this.alerts = [];
     this.overSpeed = { kind: "none" };
     this.lastOverSpeed = { kind: "none" };
+    this.gpsError = null;
     this.publish();
   }
 
@@ -101,6 +116,7 @@ export class DriveSession {
     // in, same as the app's bearing staying until the GPS sends a new one.
     const bearing = this.resolveBearing(coords.heading, coords);
     this.location = { latLng: { lat: coords.latitude, lng: coords.longitude }, bearing, speed };
+    this.gpsError = null;
 
     this.ensureMarker();
     this.placeMarker();
@@ -239,6 +255,7 @@ export class DriveSession {
       location: this.location,
       alerts: this.alerts,
       overSpeed: this.overSpeed,
+      gpsError: this.gpsError,
     });
   }
 }
