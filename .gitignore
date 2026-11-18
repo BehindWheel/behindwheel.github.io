@@ -35,3 +35,6 @@ yarn-error.log*
 
 # zcode workspace
 .zcode/
+
+# local dev server (scripts/dev-server.sh)
+.dev-server/

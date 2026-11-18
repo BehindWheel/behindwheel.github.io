@@ -14,6 +14,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - One-off stateful glyphs (the filter funnel, the theme sun/moon) may stay inline SVG in the component, also in `currentColor`.
 - The store badges are the stores' artwork, not icons — PNG as shipped.
 
+## Local dev server
+
+- Manage the local server only through `scripts/dev-server.sh status|start|restart|stop` — never launch `npm run dev` directly or through a background shell command. The script binds a fixed port (3001 by default, override with `PORT=<n>`), kills a stale server of this site before starting, leaves foreign listeners alone, and logs to `.dev-server/dev.log`.
+- "запусти сайт" / "сайт работает?" → `status`; if it reports `running`, open it and report the link — a plain "run" request is not a restart. If not running → `start`. "перезапусти сайт" → `restart`. "останови сайт" → `stop`. A rebuild is never needed for a restart.
+
 ## Branches & PRs
 
 - Work always happens on a fresh branch cut from the latest `main` — fetch first (`git fetch origin main && git checkout -b <name> origin/main`); never commit to `main` directly.
