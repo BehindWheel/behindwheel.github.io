@@ -42,6 +42,9 @@ export type MediumSpeedCamera = {
   speedTruck: number;
   region: string;
   points: CdnPoint[];
+  // The section's track length in km, published since the distance work
+  // (medium-speed v5) — optional: a body cached before it carries none.
+  distance?: number;
   updateTime: string;
   verified: boolean;
 };
@@ -59,6 +62,9 @@ export type RoadRepair = {
   updateTime: string;
   point?: CdnPoint;
   points?: CdnPoint[];
+  // Line repairs only — the section's length in km (repairs v6); a point
+  // body never carries one.
+  distance?: number;
 };
 
 // The CDN regions are latin slugs; the UI reads them as the Belarusian
