@@ -42,6 +42,7 @@ export type MediumSpeedCamera = {
   speedTruck: number;
   region: string;
   points: CdnPoint[];
+  distance: number;
   updateTime: string;
   verified: boolean;
 };

@@ -94,6 +94,7 @@ function detailRows(detail: Detail) {
           label="Направление"
           value={camera.bidirectional ? "Двухсторонняя" : "Односторонняя"}
         />
+        {camera.distance > 0 && <Row label="Длина" value={`${camera.distance.toFixed(1)} км`} />}
         <Row label="Область" value={regionName(camera.region)} />
         <Row label="Проверен" value={camera.verified ? "Да" : "Нет"} />
         <Row label="Обновлено" value={formatDate(camera.updateTime)} />
