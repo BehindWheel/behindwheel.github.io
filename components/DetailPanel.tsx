@@ -54,6 +54,14 @@ function formatDate(iso: string): string {
   return year && month && day ? `${day}.${month}.${year}` : iso;
 }
 
+// The CDN's distance rides in km with at most one decimal (the pipeline's
+// geo math rounds there); the panel keeps the source's dot decimal and
+// drops a lone ".0" on whole kilometers.
+function formatDistance(km: number): string {
+  const rounded = Math.round(km * 10) / 10;
+  return `${rounded.toString().replace(".0", "")} км`;
+}
+
 function Row({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="detail-row">
@@ -98,6 +106,9 @@ function detailRows(detail: Detail) {
           label="Направление"
           value={camera.bidirectional ? "Двухсторонняя" : "Односторонняя"}
         />
+        {camera.distance !== undefined && (
+          <Row label="Расстояние" value={formatDistance(camera.distance)} />
+        )}
         <Row label="Область" value={regionName(camera.region)} />
         <Row label="Проверен" value={camera.verified ? "Да" : "Нет"} />
         <Row label="Обновлено" value={formatDate(camera.updateTime)} />
@@ -113,6 +124,9 @@ function detailRows(detail: Detail) {
       />
       {repair.speed > 0 && (
         <Row label="Ограничение" value={`${repair.speed} км/ч`} />
+      )}
+      {repair.distance !== undefined && (
+        <Row label="Расстояние" value={formatDistance(repair.distance)} />
       )}
       <Row label="Область" value={regionName(repair.region)} />
       <Row label="Проверен" value={repair.verified ? "Да" : "Нет"} />
