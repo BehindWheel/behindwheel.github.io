@@ -55,17 +55,33 @@ function formatDate(iso: string): string {
 }
 
 // The CDN's distance rides in km with at most one decimal (the pipeline's
-// geo math rounds there); the panel keeps the source's dot decimal and
-// drops a lone ".0" on whole kilometers.
+// geo math rounds there); the panel keeps the source's dot decimal, drops a
+// lone ".0" on whole kilometers, and marks the figure approximate — it is
+// measured off the track geometry, not surveyed.
 function formatDistance(km: number): string {
   const rounded = Math.round(km * 10) / 10;
-  return `${rounded.toString().replace(".0", "")} км`;
+  return `~${rounded.toString().replace(".0", "")} км`;
 }
 
-function Row({ label, value }: { label: string; value: ReactNode }) {
+// The label leads with the row's monoline glyph — the same mask-drawn
+// svg-icon the value icons ride, so the muted ink recolors with the theme.
+// The glyph anchors the fact kind: the eye scans the icon column down the
+// panel before it commits to reading any value.
+function Row({
+  icon,
+  label,
+  value,
+}: {
+  icon: string;
+  label: string;
+  value: ReactNode;
+}) {
   return (
     <div className="detail-row">
-      <span className="detail-label">{label}</span>
+      <span className="detail-label">
+        <span className={`svg-icon icon-${icon}`} aria-hidden="true" />
+        {label}
+      </span>
       <span className="detail-value">{value}</span>
     </div>
   );
@@ -86,14 +102,19 @@ function detailRows(detail: Detail) {
     const camera = detail.camera;
     return (
       <>
-        <Row label="Скорость" value={<SpeedValue car={camera.speedCar} truck={camera.speedTruck} />} />
         <Row
+          icon="gauge"
+          label="Скорость"
+          value={<SpeedValue car={camera.speedCar} truck={camera.speedTruck} />}
+        />
+        <Row
+          icon="bidirectional"
           label="Направление"
           value={camera.bidirectional ? "Двухсторонняя" : "Односторонняя"}
         />
-        <Row label="Область" value={regionName(camera.region)} />
-        <Row label="Проверен" value={camera.verified ? "Да" : "Нет"} />
-        <Row label="Обновлено" value={formatDate(camera.updateTime)} />
+        <Row icon="map-pin" label="Область" value={regionName(camera.region)} />
+        <Row icon="check-circle" label="Проверен" value={camera.verified ? "Да" : "Нет"} />
+        <Row icon="clock" label="Обновлено" value={formatDate(camera.updateTime)} />
       </>
     );
   }
@@ -101,17 +122,22 @@ function detailRows(detail: Detail) {
     const camera = detail.camera;
     return (
       <>
-        <Row label="Скорость" value={<SpeedValue car={camera.speedCar} truck={camera.speedTruck} />} />
         <Row
+          icon="gauge"
+          label="Скорость"
+          value={<SpeedValue car={camera.speedCar} truck={camera.speedTruck} />}
+        />
+        <Row
+          icon="bidirectional"
           label="Направление"
           value={camera.bidirectional ? "Двухсторонняя" : "Односторонняя"}
         />
         {camera.distance !== undefined && (
-          <Row label="Расстояние" value={formatDistance(camera.distance)} />
+          <Row icon="route" label="Длина" value={formatDistance(camera.distance)} />
         )}
-        <Row label="Область" value={regionName(camera.region)} />
-        <Row label="Проверен" value={camera.verified ? "Да" : "Нет"} />
-        <Row label="Обновлено" value={formatDate(camera.updateTime)} />
+        <Row icon="map-pin" label="Область" value={regionName(camera.region)} />
+        <Row icon="check-circle" label="Проверен" value={camera.verified ? "Да" : "Нет"} />
+        <Row icon="clock" label="Обновлено" value={formatDate(camera.updateTime)} />
       </>
     );
   }
@@ -119,18 +145,19 @@ function detailRows(detail: Detail) {
   return (
     <>
       <Row
+        icon="calendar"
         label="Даты"
         value={`${formatDate(repair.dateBegin)} — ${formatDate(repair.dateEnd)}`}
       />
       {repair.speed > 0 && (
-        <Row label="Ограничение" value={`${repair.speed} км/ч`} />
+        <Row icon="gauge" label="Ограничение" value={`${repair.speed} км/ч`} />
       )}
       {repair.distance !== undefined && (
-        <Row label="Расстояние" value={formatDistance(repair.distance)} />
+        <Row icon="route" label="Длина" value={formatDistance(repair.distance)} />
       )}
-      <Row label="Область" value={regionName(repair.region)} />
-      <Row label="Проверен" value={repair.verified ? "Да" : "Нет"} />
-      <Row label="Обновлено" value={formatDate(repair.updateTime)} />
+      <Row icon="map-pin" label="Область" value={regionName(repair.region)} />
+      <Row icon="check-circle" label="Проверен" value={repair.verified ? "Да" : "Нет"} />
+      <Row icon="clock" label="Обновлено" value={formatDate(repair.updateTime)} />
     </>
   );
 }
@@ -199,6 +226,38 @@ export default function DetailPanel({
       ? detail.repair.road
       : detail.camera.name
     : "Не найдено";
+
+  // Long road names don't fit the one-line header — instead of a dead
+  // ellipsis the title rides back and forth over its overflow. The shift
+  // and the pace scale with the clipped amount; hover pauses it to read;
+  // reduced motion keeps the ellipsis. The measured overflow lands in CSS
+  // variables the keyframes consume.
+  const titleRef = useRef<HTMLHeadingElement | null>(null);
+  const [titleRides, setTitleRides] = useState(false);
+  useEffect(() => {
+    const el = titleRef.current;
+    if (!el || !detail) {
+      setTitleRides(false);
+      return;
+    }
+    const measure = () => {
+      const overflow = el.scrollWidth - el.clientWidth;
+      if (overflow > 8) {
+        el.style.setProperty("--title-shift", `-${overflow}px`);
+        el.style.setProperty(
+          "--title-ride-duration",
+          `${(4 + overflow / 20).toFixed(1)}s`,
+        );
+        setTitleRides(true);
+      } else {
+        setTitleRides(false);
+      }
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [detail, title]);
 
   // Share: the selected marker already rides the URL as ?marker=<id>, but
   // nothing on the panel said so. navigator.share opens the OS sheet on
@@ -318,12 +377,18 @@ export default function DetailPanel({
               </>
             )}
             {/* On the not-found face the empty state below says it all — the
-               title stays only for the screen-reader dialog label. */}
+               title stays only for the screen-reader dialog label. The row
+               keeps the title to one line: a dead ellipsis when it fits, the
+               ride animation when it doesn't (see the effect above). */}
             <h2
-              className={`detail-title${detail ? "" : " sr-only"}`}
+              ref={titleRef}
+              className={`detail-title${detail ? "" : " sr-only"}${
+                titleRides ? " detail-title-ride" : ""
+              }`}
               id="detail-title"
+              title={detail ? title : undefined}
             >
-              {title}
+              <span className="detail-title-text">{title}</span>
             </h2>
           </div>
           {/* The not-found face has its own Понятно action — a second close
