@@ -212,6 +212,14 @@ export function bindLayerSelection(
   tooltip.style.display = "none";
   map.getCanvasContainer().appendChild(tooltip);
   const showTooltip = (event: maplibregl.MapLayerMouseEvent): void => {
+    // A dot marker over the same point wears its own chip, and the marker's
+    // DOM events bubble into this canvas-container listener — without this
+    // guard a line-end hover wears two tooltips at once. Sign-mode markers
+    // have no chip, so their hovers keep the line tooltip.
+    const target = event.originalEvent.target;
+    if (target instanceof Element && target.closest(".sign-marker.dot-mode")) {
+      return;
+    }
     const name = event.features?.[0]?.properties?.name;
     if (typeof name !== "string" || name === "") {
       return;
