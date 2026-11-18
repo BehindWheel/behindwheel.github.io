@@ -32,3 +32,6 @@ npm-debug.log*
 public/maplibre-gl-worker.mjs
 yarn-debug.log*
 yarn-error.log*
+
+# zcode workspace
+.zcode/
