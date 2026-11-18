@@ -199,7 +199,9 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
     if (!copied) {
       return;
     }
-    const timer = setTimeout(() => setCopied(false), 2000);
+    // The dashboard's uikit success toast lives 4s; the share glyph swap
+    // rides the same window.
+    const timer = setTimeout(() => setCopied(false), 4000);
     return () => clearTimeout(timer);
   }, [copied]);
 
@@ -311,27 +313,31 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
                 aria-label={copied ? "Ссылка скопирована" : "Поделиться ссылкой"}
                 title={copied ? "Ссылка скопирована" : "Поделиться ссылкой"}
               >
-                {copied ? (
-                  "✓"
-                ) : (
-                  /* One-off stateful glyph, inline in currentColor per the
-                     icon conventions: the iOS-style share square. */
-                  <svg
-                    viewBox="0 0 24 24"
-                    width="18"
-                    height="18"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M12 3v11" />
-                    <path d="m7.5 7.5 4.5-4.5 4.5 4.5" />
-                    <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />
-                  </svg>
-                )}
+                {/* One-off stateful glyphs, inline in currentColor per the
+                    icon conventions: the iOS-style share square, and the
+                    copied check in the same stroke metrics — the bare ✓
+                    text glyph read thin next to the drawn icon. */}
+                <svg
+                  viewBox="0 0 24 24"
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  {copied ? (
+                    <path d="m4.5 12.5 5 5 10-10.5" />
+                  ) : (
+                    <>
+                      <path d="M12 3v11" />
+                      <path d="m7.5 7.5 4.5-4.5 4.5 4.5" />
+                      <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />
+                    </>
+                  )}
+                </svg>
               </button>
               <button
                 type="button"
@@ -343,6 +349,12 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
               </button>
             </div>
           )}
+          {/* The screen-reader announcement rides an always-mounted live
+             region inside the dialog; the visible toast is the uikit card
+             parked at the screen's bottom-right. */}
+          <p className="sr-only" role="status">
+            {copied ? "Ссылка скопирована" : ""}
+          </p>
         </div>
         <div className="detail-rows">
           {detail ? (
@@ -384,6 +396,18 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
         {detail?.kind === "repairs" && detail.repair.note && (
           <p className="detail-note">{detail.repair.note}</p>
         )}
+      </div>
+      {/* The visible copy toast: the dashboard's uikit card — surface fill,
+         the ok-colored left edge — fixed bottom-right above the panel and
+         its backdrop. A tap dismisses it early, like the dashboard's toasts.
+         aria-hidden because the dialog's live region above already announces
+         the text. */}
+      <div
+        className={`share-toast${copied ? " share-toast-shown" : ""}`}
+        aria-hidden="true"
+        onClick={() => setCopied(false)}
+      >
+        Ссылка скопирована
       </div>
     </>
   );
