@@ -144,10 +144,16 @@ export class MarkerTiers {
   }
 
   // Zoom to a sign so a shared link lands in the sign tiers with the marker
-  // actually visible.
-  flyToSign(id: string): void {
+  // actually visible. A URL open on a fresh/reborn tab jumps there instantly:
+  // an animated fly over the just-loaded map reads as a stray movement.
+  flyToSign(id: string, animate = true): void {
     const entry = this.signs.find((sign) => sign.id === id);
     if (!entry) return;
-    this.map.flyTo({ center: entry.lngLat, zoom: SIGN_MIN_ZOOM + 0.5 });
+    const target = { center: entry.lngLat, zoom: SIGN_MIN_ZOOM + 0.5 };
+    if (animate) {
+      this.map.flyTo(target);
+    } else {
+      this.map.jumpTo(target);
+    }
   }
 }

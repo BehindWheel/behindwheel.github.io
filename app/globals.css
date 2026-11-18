@@ -819,6 +819,13 @@ div.map-container {
   animation: detail-slide-down 250ms cubic-bezier(0.4, 0, 1, 1) forwards;
 }
 
+/* A ?marker= open is not a click — a resurrected tab would replay the entry
+   slide every time it comes back. The class is dropped on the next marker
+   pick, so user-driven opens keep their animation. */
+.detail-panel.detail-instant {
+  animation: none;
+}
+
 @media (min-width: 768px) {
   .detail-panel.detail-closing {
     animation-name: detail-slide-out-right;
