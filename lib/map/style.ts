@@ -18,7 +18,7 @@ export const DARK_MAP_STYLE = "/styles/dark-soft.json";
 // separate from Liberty's roads: medium-speed sections take the amber of
 // icons/medium-speed.svg (#ffb366) — over the style's own amber road fill it
 // is ~1.4:1 and the line only read through its width; repair stretches take
-// the red of icons/road-repairs*.svg (#b3261e) instead of the old brown.
+// the red of icons/road-repairs-point.svg (#b3261e) instead of the old brown.
 export const MEDIUM_SPEED_LINE_COLOR = "#d97b1f";
 export const REPAIRS_LINE_COLOR = "#8c1a15";
 

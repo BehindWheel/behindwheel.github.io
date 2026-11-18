@@ -15,8 +15,7 @@ import type {
 const ICONS = {
   camera: "/icons/camera.svg",
   mediumSpeed: "/icons/medium-speed.svg",
-  repairsPoint: "/icons/road-repairs-point.svg",
-  repairsLine: "/icons/road-repairs.svg",
+  repairs: "/icons/road-repairs-point.svg",
 } as const;
 
 export type MarkerGroup<T extends { id: string }> = {
@@ -159,12 +158,12 @@ export function createMarkerGroups(data: {
         (repair) => repair.type === "point" ? repair.point : repair.points?.length,
       ),
       (repair) => {
-        // A point work wears the warning sign at its point, a stretch the
-        // barrier sign (road-repairs-point.svg vs road-repairs.svg).
+        // Point works and stretches wear the same warning sign — one icon
+        // for every repair.
         if (repair.type === "point") {
           return [
             createSignMarker({
-              icon: ICONS.repairsPoint,
+              icon: ICONS.repairs,
               label: `Ремонт дороги: ${repair.road}`,
               kind: "repairs",
             }).setLngLat([repair.point!.lng, repair.point!.lat]),
@@ -172,7 +171,7 @@ export function createMarkerGroups(data: {
         }
         return lineEnds(repair.points!).map((at) =>
           createSignMarker({
-            icon: ICONS.repairsLine,
+            icon: ICONS.repairs,
             label: `Ремонт дороги: ${repair.road}`,
             kind: "repairs",
           }).setLngLat([at.lng, at.lat]),
