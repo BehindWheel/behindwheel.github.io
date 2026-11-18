@@ -483,19 +483,28 @@ export default function MapScreen() {
                rebuild. A native select — six options need no custom dropdown. */}
             <label className="panel-region">
               Область
-              <select
-                value={region ?? ""}
-                onChange={(event) =>
-                  setRegion(event.target.value === "" ? null : event.target.value)
-                }
-              >
-                <option value="">Вся Беларусь</option>
-                {REGIONS.map((item) => (
-                  <option key={item.slug} value={item.slug}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
+              <span className="region-field">
+                <select
+                  value={region ?? ""}
+                  onChange={(event) =>
+                    setRegion(event.target.value === "" ? null : event.target.value)
+                  }
+                >
+                  <option value="">Вся Беларусь</option>
+                  {REGIONS.map((item) => (
+                    <option key={item.slug} value={item.slug}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+                {/* The native chevron hugs the border and won't be moved by
+                   padding — the select sheds it (appearance: none) and this
+                   mask-drawn glyph sits where it belongs, in currentColor. */}
+                <span
+                  className="svg-icon icon-chevron-down region-chevron"
+                  aria-hidden="true"
+                />
+              </span>
             </label>
           </div>
         )}
