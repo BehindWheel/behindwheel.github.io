@@ -21,6 +21,10 @@ type DetailPanelProps = {
   // carries (the CDN rotates); the panel renders its not-found face.
   detail: Detail | null;
   onClose: () => void;
+  // A URL open (a fresh load or a resurrected tab) is not a user gesture —
+  // showing the panel without the entry animation keeps it from looking
+  // like a fresh click every time the browser is brought back.
+  fromUrl: boolean;
 };
 
 // The dashboard's speed meta (screens/speed: the CAR_ICON/TRUCK_ICON pair
@@ -121,7 +125,11 @@ function detailRows(detail: Detail) {
 // mobile, a right side panel from 768px (the skins live in globals.css).
 // role="dialog" + aria-modal: the map behind is inert while the panel is open,
 // so Tab cycles inside it naturally and no trap code is needed.
-export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
+export default function DetailPanel({
+  detail,
+  onClose,
+  fromUrl,
+}: DetailPanelProps) {
   const panelRef = useRef<HTMLDivElement | null>(null);
   const touchStartY = useRef<number | null>(null);
   // The exit plays before the unmount: every close request flips this flag,
@@ -266,7 +274,9 @@ export default function DetailPanel({ detail, onClose }: DetailPanelProps) {
       />
       <div
         ref={panelRef}
-        className={`detail-panel${closing ? " detail-closing" : ""}`}
+        className={`detail-panel${
+          closing ? " detail-closing" : fromUrl ? " detail-instant" : ""
+        }`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="detail-title"

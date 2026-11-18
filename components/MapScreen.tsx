@@ -119,6 +119,10 @@ export default function MapScreen() {
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selected, setSelected] = useState<SelectedFeature | null>(null);
+  // A URL open happens on a fresh load (or when the browser resurrects the
+  // tab) — the panel should be there without replaying an entry animation
+  // that reads as a fresh user action.
+  const [fromUrl, setFromUrl] = useState(false);
   // The data in state drives the detail panel; the ref twin drives the
   // style-swap replay, which runs outside render.
   const [data, setData] = useState<CdnData | null>(null);
@@ -152,6 +156,7 @@ export default function MapScreen() {
 
   const selectFeature = useCallback(
     (kind: SelectionKind, id: string) => {
+      setFromUrl(false);
       setSelected({ kind, id });
       updateUrl(id);
     },
@@ -206,10 +211,12 @@ export default function MapScreen() {
         // resolve it; an unresolvable id falls through to the not-found face.
         const id = parseMarkerParam(window.location.search);
         if (id) {
+          setFromUrl(true);
           setSelected({ kind: resolveKind(data, id) ?? "unknown", id });
-          // The landing zoom may sit in the dot tier — fly into the sign tiers
-          // so the linked marker itself is visible.
-          tiersRef.current?.flyToSign(id);
+          // The landing zoom may sit in the dot tier — jump into the sign
+          // tiers so the linked marker itself is visible. No animation: this
+          // runs on every tab resurrection, where a fly reads as a glitch.
+          tiersRef.current?.flyToSign(id, false);
         }
       } catch (error) {
         // Same guard as above: a fetch resolving against a dead map is
@@ -517,7 +524,9 @@ export default function MapScreen() {
           </p>
         )}
       </div>
-      {panelOpen && <DetailPanel detail={detail} onClose={closeDetail} />}
+      {panelOpen && (
+        <DetailPanel detail={detail} onClose={closeDetail} fromUrl={fromUrl} />
+      )}
     </div>
   );
 }
