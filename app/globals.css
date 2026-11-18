@@ -10,6 +10,10 @@
   --muted: #52525b;
   --accent-text: #2563eb;
   --error-text: #dc2626;
+  /* The toast card wears the dashboard's uikit surface; ok-text is its
+     --ok-fg (#0e700e ≈ 5.6:1 on the card fill). */
+  --surface: #ffffff;
+  --ok-text: #0e700e;
 }
 
 /* The resolved theme rides <html data-theme> — the inline head script in
@@ -29,6 +33,8 @@
   --muted: #c4c9d4;
   --accent-text: #7cb3f8;
   --error-text: #f87171;
+  --surface: #2e2e2e;
+  --ok-text: #6cc26c;
 }
 
 * {
@@ -844,6 +850,46 @@ div.map-container {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 8px;
+}
+
+/* The copy toast rides the dashboard's uikit card: opaque surface fill,
+   hairline border, the 3px ok-colored left edge, slide-up + fade. Fixed
+   bottom-right above the panel (z 41) and its backdrop; a tap dismisses it
+   early. visibility:hidden in the idle face keeps the always-mounted card
+   click-transparent. */
+.share-toast {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 60;
+  padding: 10px 14px;
+  border: 1px solid var(--panel-border);
+  border-left: 3px solid var(--ok-text);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: 13px;
+  white-space: nowrap;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+}
+
+.share-toast-shown {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+
+@media (width <= 720px) {
+  /* the toasts go edge to edge — a right-hugging stack wastes half a narrow screen */
+  .share-toast {
+    left: 16px;
+    right: 16px;
+  }
 }
 
 /* The kind icon + title read as one line: the icon is the same artwork the
