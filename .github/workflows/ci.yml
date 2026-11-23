@@ -4,6 +4,12 @@ on:
   pull_request:
     branches: [main]
 
+# A newer push to the same PR makes the previous checks obsolete — cancel them instead of
+# paying for a verdict nobody reads (Renovate rebases used to stack runs on the same PR).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   checks:
     runs-on: ubuntu-latest
