@@ -12,6 +12,7 @@ const stationary: StationaryCamera = {
   speedCar: 60,
   speedTruck: 60,
   region: "grodno",
+  verified: true,
 };
 
 const section: MediumSpeedCamera = {
@@ -24,6 +25,7 @@ const section: MediumSpeedCamera = {
   speedTruck: 90,
   region: "grodno",
   updateTime: "2026-11-01T00:00:00Z",
+  verified: true,
   points: [
     { lat: 53.7, lng: 23.8 },
     { lat: 53.71, lng: 23.81 },
