@@ -73,6 +73,9 @@ export class DriveSession {
   }
 
   start(): void {
+    // start() runs inside the drive button's tap: the one moment the browser
+    // lets the page unlock audio for the GPS-driven phrases to come.
+    this.sound.unlock();
     // Geolocation is a secure-context API: an http:// page (a phone opening
     // the LAN address) never gets a permission prompt at all — say so before
     // the silent failure reads as a broken feature. No watch is started: the
@@ -135,8 +138,9 @@ export class DriveSession {
 
     this.overSpeed = computeOverSpeed(this.alerts, this.location.speed);
     // The app emits over-speed on the state change (distinctUntilChanged):
-    // Regular → Double re-warns, a steady state doesn't. The tracker's five
-    // seconds backstop repeats the phrase while the driver keeps speeding.
+    // Regular → Double re-warns, a steady state doesn't, and slowing down
+    // then speeding up again is a fresh state. The tracker's five seconds
+    // only keep a driver hovering at the limit from being nagged.
     if (this.overSpeed.kind !== "none" && !sameOverSpeed(this.overSpeed, this.lastOverSpeed)) {
       this.sound.playOverSpeed();
     }

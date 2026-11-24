@@ -37,19 +37,43 @@ function limitSound(speedLimit: number): string | null {
     : null;
 }
 
+// A near-empty WAV: played from the drive button's tap it unlocks the audio
+// element for the GPS-driven phrases that follow (see unlock()).
+const SILENT_WAV = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
+
+type Phrase = { id: string; sound: string };
+
 // The app's SharedSoundController: phrases enqueue in order and play one by
 // one; the played-alert tracker decides whether a warning is allowed to
 // sound at all. The over-speed id is fixed like the app's overSpeedId — the
-// phrase may repeat every five seconds while the driver keeps speeding, and
-// goes quiet the moment they slow down (a fresh alert object then re-warns).
+// tracker keeps the phrase from repeating within five seconds, so a driver
+// hovering around the limit isn't nagged; the caller decides when a new
+// over-speed state deserves the phrase.
 export class AlertSoundController {
   private tracker = new PlayedAlertTracker();
   private overSpeedId = "over-speed";
-  private queue: string[] = [];
+  private queue: Phrase[] = [];
   private playing = false;
+  // One element for the whole session: browsers (iOS Safari first) allow
+  // script-started playback only on an element a user gesture has already
+  // played, and the phrases start from GPS callbacks, never from a tap.
   private audio: HTMLAudioElement | null = null;
+  // Bumped by stop(): a late event or rejection from a phrase of the
+  // previous run must not touch the queue of the next one.
+  private generation = 0;
 
   constructor(private readonly volume: () => number = () => 1) {}
+
+  // Call from the user gesture that starts the drive: plays the silent clip
+  // so the element is unlocked before the first GPS-driven phrase.
+  unlock(): void {
+    const audio = this.element();
+    audio.src = SILENT_WAV;
+    audio.play().catch(() => {
+      // Nothing to unlock on a browser that refuses even this; the phrases
+      // handle their own rejection (and un-record themselves, see playNext).
+    });
+  }
 
   playCameraLimit(id: string, speedLimit: number, cameraType: CameraType): void {
     this.playIfAllowed(id, cameraSound(cameraType));
@@ -66,30 +90,36 @@ export class AlertSoundController {
   }
 
   stop(): void {
+    this.generation += 1;
     this.queue = [];
     if (this.audio) {
       this.audio.pause();
+      this.audio.onended = null;
+      this.audio.onerror = null;
       this.audio = null;
     }
     this.playing = false;
   }
 
+  private element(): HTMLAudioElement {
+    this.audio ??= new Audio();
+    return this.audio;
+  }
+
+  // The id is recorded when the phrase is queued, not when it finishes: GPS
+  // fixes arrive every second while a phrase takes several, and the same
+  // alert must not queue twice meanwhile. A phrase the browser then refuses
+  // to play gives its id back (playNext), so it is not silenced for minutes.
   private playIfAllowed(id: string, sound: string, expirationMs = FIVE_MINUTES): void {
     if (this.tracker.shouldPlay(id, expirationMs)) {
-      if (this.enqueue(sound)) {
-        this.tracker.record(id);
-      }
+      this.tracker.record(id);
+      this.queue.push({ id, sound });
+      this.playNext();
     }
   }
 
-  private enqueue(sound: string): boolean {
-    this.queue.push(sound);
-    this.playNext();
-    return true;
-  }
-
-  // HTMLAudioElement sequenced through the ended event — one playing at a
-  // time, the queue survives while the next phrase loads.
+  // One element sequenced through ended/error — one phrase playing at a
+  // time, the queue survives while the next one loads.
   private playNext(): void {
     if (this.playing) {
       return;
@@ -99,25 +129,35 @@ export class AlertSoundController {
       return;
     }
     this.playing = true;
-    const audio = new Audio(next);
+    const generation = this.generation;
+    const audio = this.element();
+    let finished = false;
+    const finish = (refused: boolean) => {
+      if (finished || generation !== this.generation) {
+        return;
+      }
+      finished = true;
+      audio.onended = null;
+      audio.onerror = null;
+      if (refused) {
+        this.tracker.forget(next.id);
+      }
+      this.playing = false;
+      this.playNext();
+    };
+    audio.onended = () => finish(false);
+    // A failed phrase load skips itself and the queue keeps going — a
+    // missing file must never wedge the drive mode's voice (nor be retried
+    // every second: the id stays recorded).
+    audio.onerror = () => finish(false);
+    audio.src = next.sound;
     audio.volume = this.volume();
-    this.audio = audio;
-    audio.addEventListener("ended", () => {
-      this.playing = false;
-      this.audio = null;
-      this.playNext();
-    });
-    // A failed phrase load skips itself; the queue keeps going — a missing
-    // file must never wedge the drive mode's voice.
-    audio.addEventListener("error", () => {
-      this.playing = false;
-      this.audio = null;
-      this.playNext();
-    });
-    audio.play().catch(() => {
-      // Autoplay rejection or a dead stream: drop the phrase, keep the queue.
-      this.playing = false;
-      this.audio = null;
+    audio.play().catch((error: unknown) => {
+      // NotAllowedError is autoplay policy: the phrase never sounded, so it
+      // gets its id back and the next fix may try again. Anything else (an
+      // interrupted load, a dead stream) just drops the phrase. Either way
+      // the rest of the queue goes on.
+      finish(error instanceof DOMException && error.name === "NotAllowedError");
     });
   }
 }

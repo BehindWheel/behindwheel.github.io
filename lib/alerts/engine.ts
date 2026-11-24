@@ -218,6 +218,12 @@ export class PlayedAlertTracker {
     this.history.set(id, this.now());
   }
 
+  // Takes an id back: a phrase that was recorded but never sounded (the
+  // browser refused to play it) must be allowed again on the next fix.
+  forget(id: string): void {
+    this.history.delete(id);
+  }
+
   cleanup(): void {
     const currentTime = this.now();
     for (const [id, playedAt] of this.history) {

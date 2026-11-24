@@ -37,22 +37,26 @@ vi.mock("maplibre-gl", () => ({
 // The sound stub records every phrase the queue constructs, in order; play
 // simulates completion so the queue advances to the next phrase.
 class FakeAudio {
-  private listeners: Record<string, (() => void)[]> = {};
-  constructor(src: string) {
-    audioLog.push(src);
-  }
-  addEventListener(name: string, cb: () => void) {
-    (this.listeners[name] = this.listeners[name] || []).push(cb);
-  }
+  src = "";
+  volume = 1;
+  onended: (() => void) | null = null;
+  onerror: (() => void) | null = null;
   play() {
-    setTimeout(() => (this.listeners.ended || []).forEach((cb) => cb()), 5);
+    // The silent unlock clip is not a phrase; only real files are logged.
+    if (!this.src.startsWith("data:")) {
+      audioLog.push(this.src);
+    }
+    // The clip ends for whoever set this src — a later phrase's handler
+    // must not be fired by an earlier clip's timer.
+    const src = this.src;
+    setTimeout(() => {
+      if (this.src === src) {
+        this.onended?.();
+      }
+    }, 5);
     return Promise.resolve();
   }
   pause() {}
-  set volume(_: number) {}
-  get volume() {
-    return 1;
-  }
 }
 
 const fakeMap = {

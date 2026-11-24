@@ -31,22 +31,24 @@ type SectionFixture = {
   speedLimit: number;
 };
 
-// The voice spy: every phrase the queue constructs is recorded. When
-// playback really works (a headed run with sound), the queue advances on
-// the file's own `ended` — the phrases play sequentially, never
-// overlapping. When playback is unavailable (autoplay rejection, a codec
-// gap), the spy simulates the shortest possible phrase so the queue still
-// advances headless.
+// The voice spy: every phrase the player starts is recorded (the silent
+// unlock clip of the drive button's tap is not a phrase). The player reuses
+// one element, so a phrase is logged when its play() starts, by the src
+// attribute as the page wrote it. When playback really works (a headed run
+// with sound), the queue advances on the file's own `ended` — the phrases
+// play sequentially, never overlapping. When playback is unavailable
+// (autoplay rejection, a codec gap), the spy simulates the shortest possible
+// phrase so the queue still advances headless.
 const AUDIO_SPY = `(() => {
   const played = [];
   window.__audio = played;
   const NativeAudio = window.Audio;
   class SpyAudio extends NativeAudio {
-    constructor(src) {
-      super(src);
-      played.push(src);
-    }
     play() {
+      const src = this.getAttribute("src") || "";
+      if (!src.startsWith("data:")) {
+        played.push(src);
+      }
       return super.play().then(
         () => {
           let done = false;
