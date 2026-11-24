@@ -10,8 +10,9 @@ import { loadCdnData, REGIONS, type CdnData } from "@/lib/cdn";
 import { loadToggles, saveToggles } from "@/lib/layerToggles";
 import { searchObjects, type SearchHit } from "@/lib/search";
 import { createMap, onStyleLoad } from "@/lib/map/createMap";
-import { DriveSession, type DriveState } from "@/lib/alerts/driveSession";
-import { DriveAlertCards, DriveButton, GpsNotice, SpeedLimitSign } from "@/components/DriveOverlay";
+import DriveButton from "@/components/drive/DriveButton";
+import DriveOverlay from "@/components/drive/DriveOverlay";
+import { useDriveMode } from "@/components/drive/useDriveMode";
 import { markerSearch, parseMarkerParam } from "@/lib/routing";
 import { getTheme, onThemeChange, setTheme, type Theme } from "@/lib/theme";
 import {
@@ -91,9 +92,7 @@ const KIND_ICONS: Record<SelectionKind, string> = {
 export default function MapScreen() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  // The "where am I" control: the drive mode takes the position display away
-  // from it (removeControl stops its watch and clears dot and circle) and
-  // hands it back on exit.
+  // The "where am I" control — the drive mode borrows it (useDriveMode).
   const geolocateRef = useRef<maplibregl.GeolocateControl | null>(null);
   const dataRef = useRef<CdnData | null>(null);
   const markersRef = useRef<MarkerGroups | null>(null);
@@ -132,12 +131,12 @@ export default function MapScreen() {
   // The data in state drives the detail panel; the ref twin drives the
   // style-swap replay, which runs outside render.
   const [data, setData] = useState<CdnData | null>(null);
-  // The drive mode: the session owns the GPS watch, the user arrow and the
-  // voice imperatively (like the tiers own the signs); React only mirrors
-  // its snapshot for the cards and the sign. The ref survives re-renders.
-  const [driveActive, setDriveActive] = useState(false);
-  const [drive, setDrive] = useState<DriveState | null>(null);
-  const driveRef = useRef<DriveSession | null>(null);
+  const {
+    active: driveActive,
+    state: driveState,
+    toggle: toggleDrive,
+    stop: stopDrive,
+  } = useDriveMode({ mapRef, geolocateRef, dataRef });
   const hits = useMemo(
     () => (data && query.trim() !== "" ? searchObjects(data, query) : []),
     [data, query],
@@ -277,12 +276,8 @@ export default function MapScreen() {
       map.once("load", load);
     }
     return () => {
-      // The drive session holds a marker on this map — it must stop before
-      // the map dies, or its next GPS fix touches a dead container.
-      driveRef.current?.stop();
-      driveRef.current = null;
-      setDriveActive(false);
-      setDrive(null);
+      // The drive session holds a marker on this map — it stops first.
+      stopDrive();
       tiersRef.current?.remove();
       tiersRef.current = null;
       map.remove();
@@ -291,7 +286,7 @@ export default function MapScreen() {
       markersRef.current = null;
       setData(null);
     };
-  }, [loadData]);
+  }, [loadData, stopDrive]);
 
   useEffect(() => {
     // The tier manager owns the sign display; the overlay lines follow the
@@ -355,39 +350,6 @@ export default function MapScreen() {
     setStatus("loading");
     void loadData(map, loadCdnData());
   }, [loadData]);
-
-  // The drive toggle needs both the map and the data — without either there
-  // is nothing to navigate against, so the tap stays a no-op. A session
-  // lives until stopped or until the map effect tears it down.
-  const toggleDrive = useCallback(() => {
-    const map = mapRef.current;
-    const geolocate = geolocateRef.current;
-    if (driveRef.current) {
-      driveRef.current.stop();
-      driveRef.current = null;
-      setDriveActive(false);
-      setDrive(null);
-      // The "where am I" button returns with its dot and accuracy circle.
-      if (map && geolocate) {
-        map.addControl(geolocate, "bottom-right");
-      }
-      return;
-    }
-    const data = dataRef.current;
-    if (!map || !data) {
-      return;
-    }
-    // Drive owns the position display now — the control's removal also
-    // stops any watch it ran, so the dot and circle never compete with the
-    // drive arrow.
-    if (geolocate) {
-      map.removeControl(geolocate);
-    }
-    const session = new DriveSession(map, data, setDrive);
-    driveRef.current = session;
-    session.start();
-    setDriveActive(true);
-  }, []);
 
   // The theme toggle: an explicit choice rides localStorage through
   // setTheme; with no choice the device scheme wins and this state follows
@@ -456,13 +418,7 @@ export default function MapScreen() {
         {/* The drive mode's chrome: the button lives above the data pill, the
            cards and the over-speed sign ride the map while the mode runs. */}
         <DriveButton active={driveActive} onToggle={toggleDrive} />
-        {driveActive && drive && (
-          <>
-            <DriveAlertCards state={drive} />
-            <SpeedLimitSign overSpeed={drive.overSpeed} />
-            {drive.gpsError && <GpsNotice error={drive.gpsError} />}
-          </>
-        )}
+        {driveActive && driveState && <DriveOverlay state={driveState} />}
         {filtersOpen && (
           <div className="panel" id="layer-panel" inert={backgroundInert ? true : undefined}>
             {/* Search first — it's the primary way in once you know what
