@@ -75,10 +75,13 @@ export class DriveSession {
   start(): void {
     // Geolocation is a secure-context API: an http:// page (a phone opening
     // the LAN address) never gets a permission prompt at all — say so before
-    // the silent failure reads as a broken feature.
-    if (typeof window !== "undefined" && !window.isSecureContext) {
+    // the silent failure reads as a broken feature. No watch is started: the
+    // browser would answer it with PERMISSION_DENIED and the error callback
+    // would replace this (right) explanation with a wrong "grant access" one.
+    if (typeof window !== "undefined" && window.isSecureContext === false) {
       this.gpsError = GPS_ERROR_INSECURE;
       this.publish();
+      return;
     }
     this.watchId = navigator.geolocation.watchPosition(
       (position) => this.onFix(position),

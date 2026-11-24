@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DriveSession, type DriveState } from "./driveSession";
+import { GPS_ERROR_INSECURE } from "./messages";
 
 // The drive session against a stubbed maplibre and browser: a fake GPS feed
 // drives a real approach to a camera and the test asserts the full chain —
@@ -242,5 +243,25 @@ describe("DriveSession", () => {
 
     session.stop();
     await new Promise((r) => setTimeout(r, 10));
+  });
+
+  it("explains an insecure origin and starts no GPS watch", () => {
+    vi.stubGlobal("window", { isSecureContext: false });
+    const states: DriveState[] = [];
+    const session = new DriveSession(
+      fakeMap as never,
+      { stationary: [], mediumSpeed: [], repairs: [] } as never,
+      (state) => states.push(state),
+    );
+    session.start();
+
+    // The browser would answer a watch here with PERMISSION_DENIED; the
+    // session never asks, so the insecure explanation is the one that stays.
+    expect(watchCb).toBeNull();
+    expect(states[states.length - 1].gpsError).toBe(GPS_ERROR_INSECURE);
+
+    session.stop();
+    // Only the window stub goes: the other globals stay for stray rAF ticks.
+    vi.stubGlobal("window", undefined);
   });
 });
