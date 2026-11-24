@@ -16,6 +16,7 @@ import {
 import { alertableCameras } from "../alerts/events";
 import { AlertSoundController } from "../alerts/sounds";
 import { DynamicZoom } from "../alerts/dynamicZoom";
+import { ScreenWakeLock } from "../alerts/wakeLock";
 import { computeHeading, distanceBetween, type LatLng } from "../alerts/geo";
 import {
   GPS_ERROR_DENIED,
@@ -51,6 +52,8 @@ export class DriveSession {
   private marker: maplibregl.Marker | null = null;
   private arrow: HTMLElement | null = null;
   private zoomCalculator = new DynamicZoom();
+  // A locked phone screen suspends the page, GPS and voice with it.
+  private wakeLock = new ScreenWakeLock();
   private location: DriveLocation | null = null;
   private alerts: Alert[] = [];
   private overSpeed: OverSpeedAlert = { kind: "none" };
@@ -86,6 +89,7 @@ export class DriveSession {
       this.publish();
       return;
     }
+    this.wakeLock.acquire();
     this.watchId = navigator.geolocation.watchPosition(
       (position) => this.onFix(position),
       (error) => {
@@ -109,6 +113,7 @@ export class DriveSession {
       this.arrow = null;
     }
     this.sound.stop();
+    this.wakeLock.release();
     this.location = null;
     this.alerts = [];
     this.overSpeed = { kind: "none" };
