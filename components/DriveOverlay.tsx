@@ -47,8 +47,11 @@ export function DriveAlertCards({ state }: { state: DriveState }) {
   }
   return (
     <div className="drive-cards" role="status" aria-live="polite">
-      {nearest.map((alert) => (
-        <div className="drive-card" key={`${alert.id}:${alert.distance}`}>
+      {/* The key must not carry the distance: it changes every fix, and a
+          remounted card makes the live region read out again each second.
+          The index tells apart the two ends of one section (same id). */}
+      {nearest.map((alert, index) => (
+        <div className="drive-card" key={`${alert.id}:${index}`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="drive-card-icon" src={ALERT_ICONS[alert.cameraType]} alt="" />
           <div className="drive-card-text">
