@@ -532,5 +532,21 @@ test("the offline shell keeps the drive voice available", async ({ page }) => {
     return res.status;
   });
   expect(status).toBe(200);
+
+  // A media element asks for a byte range, and Safari insists on a 206: the
+  // worker cuts it from the whole cached file.
+  const ranged = await page.evaluate(async () => {
+    const res = await fetch("/audio/stationary_camera.mp3", {
+      headers: { Range: "bytes=0-99" },
+    });
+    return {
+      status: res.status,
+      length: (await res.arrayBuffer()).byteLength,
+      contentRange: res.headers.get("content-range"),
+    };
+  });
+  expect(ranged.status).toBe(206);
+  expect(ranged.length).toBe(100);
+  expect(ranged.contentRange).toMatch(/^bytes 0-99\/\d+$/);
   await page.context().setOffline(false);
 });
