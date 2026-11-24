@@ -475,6 +475,64 @@ test("a GPS failure names itself in the pill", async ({ page }) => {
   await expect(page.locator(".drive-marker")).toHaveCount(1);
 });
 
+// The two tests below run on the browser's own geolocation — no GPS_STUB, no
+// audio spy: the permission flow and the real position object are what the
+// stub fakes everywhere else. Playwright's setGeolocation carries only
+// coordinates (no speed, no heading), so these two cover the plumbing —
+// permission, first fix, marker, camera, error — and the stubbed tests keep
+// the driving scenarios that need a speed.
+const REAL_FIX = { latitude: 53.647197, longitude: 23.810971, accuracy: 10 };
+
+test("a granted browser permission puts the arrow on the real fix", async ({ page }) => {
+  await page.context().grantPermissions(["geolocation"]);
+  await page.context().setGeolocation(REAL_FIX);
+  await page.goto("/");
+  await ensureMapReady(page);
+
+  await page.getByRole("button", { name: DRIVE_START_LABEL }).click();
+
+  // The first real fix: the arrow appears, no error pill, and the follow
+  // camera centres the map on it.
+  await expect(page.locator(".drive-marker")).toHaveCount(1);
+  await expect(page.locator(".drive-gps-error")).toHaveCount(0);
+  await expect
+    .poll(
+      async () => {
+        const [marker, map] = await Promise.all([
+          page.locator(".drive-marker").boundingBox(),
+          page.locator(".maplibregl-map").boundingBox(),
+        ]);
+        if (!marker || !map) {
+          return Number.POSITIVE_INFINITY;
+        }
+        return Math.hypot(
+          marker.x + marker.width / 2 - (map.x + map.width / 2),
+          marker.y + marker.height / 2 - (map.y + map.height / 2),
+        );
+      },
+      { timeout: 10_000 },
+    )
+    .toBeLessThan(5);
+
+  // Stopping hands the display back, same as with the stub.
+  await page.getByRole("button", { name: DRIVE_STOP_LABEL }).click();
+  await expect(page.locator(".drive-marker")).toHaveCount(0);
+  await expect(page.locator(".maplibregl-ctrl-geolocate")).toHaveCount(1);
+});
+
+test("a browser that refuses the permission names it in the pill", async ({ page }) => {
+  // No grantPermissions: the context's geolocation permission is not given,
+  // and the browser answers the watch with its own PERMISSION_DENIED.
+  await page.context().setGeolocation(REAL_FIX);
+  await page.goto("/");
+  await ensureMapReady(page);
+
+  await page.getByRole("button", { name: DRIVE_START_LABEL }).click();
+
+  await expect(page.locator(".drive-gps-error")).toHaveText(GPS_ERROR_DENIED);
+  await expect(page.locator(".drive-marker")).toHaveCount(0);
+});
+
 test("a reload during the drive lands on a clean map", async ({ page }) => {
   const cam = await pickStationary();
   await installStubs(page, buildFixes(cam.point, (cam.angle + 180) % 360));
