@@ -18,6 +18,22 @@ on an interactive MapLibre map. Published at https://behindwheel.github.io/.
 - **PWA**: a web manifest plus an offline service worker — the app shell and the
   last CDN snapshot survive a dropped connection; map tiles are not cached.
 
+## Drive mode
+
+The car icon (bottom-left) starts the web counterpart of the mobile app's
+navigation mode: the browser watches GPS, an arrow marker rides the map while
+the camera follows, and the alert engine warns about cameras ahead — the same
+corridor, camera-angle and road-cross-track logic the app uses
+(`lib/alerts/`, ported from the KMP guidance feature, tested against the
+app's test cases). At or above a nearest camera's limit a traffic-sign
+overlay shows the limit and a voice prompt plays; camera warnings play the
+camera phrase followed by the limit phrase, at most once per camera per five
+minutes.
+
+The voice prompts in `public/audio/` are the mobile app's own bundled
+recordings — the same files the client plays — so the drive mode sounds
+exactly like the app and speaks without any runtime TTS.
+
 ## Development
 
 ```bash
@@ -26,6 +42,7 @@ npm run dev       # http://localhost:3000
 npm run lint      # eslint
 npm test          # vitest — the lib/ helpers
 npm run build     # static export into out/
+npm run test:e2e  # playwright — the drive mode on the built export
 ```
 
 To check the production build locally, serve the export (and let the service

@@ -10,6 +10,9 @@ import { loadCdnData, REGIONS, type CdnData } from "@/lib/cdn";
 import { loadToggles, saveToggles } from "@/lib/layerToggles";
 import { searchObjects, type SearchHit } from "@/lib/search";
 import { createMap, onStyleLoad } from "@/lib/map/createMap";
+import DriveButton from "@/components/drive/DriveButton";
+import DriveOverlay from "@/components/drive/DriveOverlay";
+import { useDriveMode } from "@/components/drive/useDriveMode";
 import { markerSearch, parseMarkerParam } from "@/lib/routing";
 import { getTheme, onThemeChange, setTheme, type Theme } from "@/lib/theme";
 import {
@@ -89,6 +92,8 @@ const KIND_ICONS: Record<SelectionKind, string> = {
 export default function MapScreen() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  // The "where am I" control — the drive mode borrows it (useDriveMode).
+  const geolocateRef = useRef<maplibregl.GeolocateControl | null>(null);
   const dataRef = useRef<CdnData | null>(null);
   const markersRef = useRef<MarkerGroups | null>(null);
   // The marker tiers (dots → small → large signs) own the sign display from
@@ -126,6 +131,12 @@ export default function MapScreen() {
   // The data in state drives the detail panel; the ref twin drives the
   // style-swap replay, which runs outside render.
   const [data, setData] = useState<CdnData | null>(null);
+  const {
+    active: driveActive,
+    state: driveState,
+    toggle: toggleDrive,
+    stop: stopDrive,
+  } = useDriveMode({ mapRef, geolocateRef, dataRef });
   const hits = useMemo(
     () => (data && query.trim() !== "" ? searchObjects(data, query) : []),
     [data, query],
@@ -237,8 +248,9 @@ export default function MapScreen() {
     if (!container) {
       return;
     }
-    const map = createMap(container);
+    const { map, geolocate } = createMap(container);
     mapRef.current = map;
+    geolocateRef.current = geolocate;
 
     // The fetch starts on mount, in parallel with the style/tile load. The
     // pre-attached catch keeps an early rejection silent until loadData
@@ -264,6 +276,8 @@ export default function MapScreen() {
       map.once("load", load);
     }
     return () => {
+      // The drive session holds a marker on this map — it stops first.
+      stopDrive();
       tiersRef.current?.remove();
       tiersRef.current = null;
       map.remove();
@@ -272,7 +286,7 @@ export default function MapScreen() {
       markersRef.current = null;
       setData(null);
     };
-  }, [loadData]);
+  }, [loadData, stopDrive]);
 
   useEffect(() => {
     // The tier manager owns the sign display; the overlay lines follow the
@@ -401,6 +415,10 @@ export default function MapScreen() {
             aria-hidden="true"
           />
         </button>
+        {/* The drive mode's chrome: the button lives above the data pill, the
+           cards and the over-speed sign ride the map while the mode runs. */}
+        <DriveButton active={driveActive} onToggle={toggleDrive} />
+        {driveActive && driveState && <DriveOverlay state={driveState} />}
         {filtersOpen && (
           <div className="panel" id="layer-panel" inert={backgroundInert ? true : undefined}>
             {/* Search first — it's the primary way in once you know what
