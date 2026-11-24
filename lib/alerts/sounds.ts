@@ -4,7 +4,7 @@
 // the speed-limit phrase, an over-speed warning its own phrase. The phrases
 // ship as static /audio/ files, so the drive mode speaks offline too.
 
-import { FIVE_MINUTES, FIVE_SECONDS, PlayedAlertTracker } from "./engine";
+import { FIVE_MINUTES, FIVE_SECONDS, PlayedAlertTracker } from "./playedAlertTracker";
 import type { CameraType } from "./engine";
 
 // The app's Sound.kt uris, one file per phrase under /audio/.

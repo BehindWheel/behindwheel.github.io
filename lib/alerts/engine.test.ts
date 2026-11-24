@@ -2,11 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   computeAlerts,
   computeOverSpeed,
-  FIVE_MINUTES,
-  FIVE_SECONDS,
   isAngleInRange,
+  isSameOverSpeed,
   isUserOnCameraRoad,
-  PlayedAlertTracker,
   type AlertableCamera,
   type DriveLocation,
 } from "./engine";
@@ -197,34 +195,23 @@ describe("computeOverSpeed", () => {
   });
 });
 
-describe("PlayedAlertTracker", () => {
-  it("allows the first play, blocks inside the window, re-allows after", () => {
-    let now = 0;
-    const tracker = new PlayedAlertTracker(() => now);
-    expect(tracker.shouldPlay("a")).toBe(true);
-    tracker.record("a");
-    expect(tracker.shouldPlay("a")).toBe(false);
-    now = FIVE_MINUTES;
-    expect(tracker.shouldPlay("a")).toBe(false);
-    now = FIVE_MINUTES + 1;
-    expect(tracker.shouldPlay("a")).toBe(true);
+describe("isSameOverSpeed", () => {
+  const none = { kind: "none" } as const;
+  const regular = (speedLimit: number) => ({ kind: "regular", speedLimit }) as const;
+  const double = (cameraId: string) =>
+    ({ kind: "double", cameraId, speedLimit: 60 }) as const;
+
+  it("is the same for a steady state, different across kinds", () => {
+    expect(isSameOverSpeed(none, none)).toBe(true);
+    expect(isSameOverSpeed(regular(60), regular(60))).toBe(true);
+    expect(isSameOverSpeed(double("a"), double("a"))).toBe(true);
+    // Regular → Double is the re-warn the app emits.
+    expect(isSameOverSpeed(regular(60), double("a"))).toBe(false);
+    expect(isSameOverSpeed(none, regular(60))).toBe(false);
   });
 
-  it("honors a custom window for the over-speed repeat", () => {
-    let now = 0;
-    const tracker = new PlayedAlertTracker(() => now);
-    tracker.record("over-speed");
-    expect(tracker.shouldPlay("over-speed", FIVE_SECONDS)).toBe(false);
-    now = FIVE_SECONDS + 1;
-    expect(tracker.shouldPlay("over-speed", FIVE_SECONDS)).toBe(true);
-  });
-
-  it("drops history older than the cleanup horizon", () => {
-    let now = 0;
-    const tracker = new PlayedAlertTracker(() => now);
-    tracker.record("old");
-    now = 60 * 60_000;
-    tracker.cleanup();
-    expect(tracker.shouldPlay("old")).toBe(true);
+  it("tells apart what a kind names: the limit, the camera", () => {
+    expect(isSameOverSpeed(regular(60), regular(90))).toBe(false);
+    expect(isSameOverSpeed(double("a"), double("b"))).toBe(false);
   });
 });
